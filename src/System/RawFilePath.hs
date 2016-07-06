@@ -1,7 +1,9 @@
 -- The 'unix' module provides 'RawFilePath'-variants of all functions, but
 -- higher-level wrappers of it such as 'directory' or 'process' doesn't.
 -- This module provides it.
---
+
+{-# language LambdaCase #-}
+
 module System.RawFilePath
     ( RawFilePath
     , callProcess
@@ -42,7 +44,7 @@ a </> b = mconcat [a, "/", b]
 callProcess :: RawFilePath -> [ByteString] -> IO ()
 callProcess cmd args = do
     pid <- forkProcess $ executeFile cmd True args Nothing
-    getProcessStatus True False pid >>= \ mstatus -> case mstatus of
+    getProcessStatus True False pid >>= \case
         Just status -> case status of
             Exited exitCode -> case exitCode of
                 ExitSuccess -> return ()
@@ -56,7 +58,7 @@ callProcessSilent cmd args = do
         closeFd stdOutput
         closeFd stdError
         executeFile cmd True args Nothing
-    getProcessStatus True False pid >>= \ mstatus -> case mstatus of
+    getProcessStatus True False pid >>= \case
         Just status -> case status of
             Exited exitCode -> return exitCode
             _ -> die cmd
@@ -79,7 +81,7 @@ readProcess cmd args = do
     closeFd fd1
     closeFd efd1
     content <- fdToHandle fd0 >>= B.hGetContents
-    getProcessStatus True False pid >>= \ mstatus -> case mstatus of
+    getProcessStatus True False pid >>= \mstatus -> case mstatus of
         Just status -> case status of
             Exited exitCode -> case exitCode of
                 ExitSuccess -> return $ Right content
@@ -136,8 +138,8 @@ bufferSize = 4096
 
 copyFile :: RawFilePath -> RawFilePath -> IO ()
 copyFile srcPath tgtPath = do
-    bracket ropen hClose $ \ hi ->
-        bracket topen hClose $ \ ho ->
+    bracket ropen hClose $ \hi ->
+        bracket topen hClose $ \ho ->
             allocaBytes bufferSize $ copyContents hi ho
     rename tmpPath tgtPath
   where
@@ -154,7 +156,7 @@ copyFile srcPath tgtPath = do
 -- If the file does not exist, nothing happens.
 tryRemoveFile :: RawFilePath -> IO ()
 tryRemoveFile path = catchIOError (removeLink path) $
-    \ e -> unless (isDoesNotExistError e) $ ioError e
+    \e -> unless (isDoesNotExistError e) $ ioError e
 
 getHomeDirectory :: IO RawFilePath
 getHomeDirectory = getEnv "HOME" >>= maybe (die noHomeErrMsg) return
