@@ -81,7 +81,7 @@ readProcess cmd args = do
     closeFd fd1
     closeFd efd1
     content <- fdToHandle fd0 >>= B.hGetContents
-    getProcessStatus True False pid >>= \mstatus -> case mstatus of
+    getProcessStatus True False pid >>= \case
         Just status -> case status of
             Exited exitCode -> case exitCode of
                 ExitSuccess -> return $ Right content
