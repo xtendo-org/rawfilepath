@@ -9,6 +9,7 @@ module System.RawFilePath
     , callProcess
     , callProcessSilent
     , readProcess
+    , readProcessEither
     , getDirectoryFiles
     , getDirectoryFilesR
     , getDirectoryFilesSuffix
@@ -64,10 +65,23 @@ callProcessSilent cmd args = do
             _ -> die cmd
         Nothing -> die cmd
 
-readProcess
+readProcess :: RawFilePath -> [ByteString] -> IO ByteString
+readProcess cmd args = do
+    (fd0, fd1) <- createPipe
+    pid <- forkProcess $ do
+        closeFd fd0
+        closeFd stdOutput
+        void $ dupTo fd1 stdOutput
+        executeFile cmd True args Nothing
+    closeFd fd1
+    fdToHandle fd0 >>= getContentsAndClose
+  where
+    getContentsAndClose h = B.hGetContents h <* hClose h
+
+readProcessEither
     :: RawFilePath -> [ByteString]
     -> IO (Either ByteString ByteString)
-readProcess cmd args = do
+readProcessEither cmd args = do
     (fd0, fd1) <- createPipe
     (efd0, efd1) <- createPipe
     pid <- forkProcess $ do
