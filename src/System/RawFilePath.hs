@@ -42,6 +42,10 @@ infixr 5  </>
 (</>) :: RawFilePath -> RawFilePath -> RawFilePath
 a </> b = mconcat [a, "/", b]
 
+processError :: RawFilePath -> IOError
+processError cmd = mkIOError userErrorType
+    ("calling process " <> show cmd) Nothing (Just $ show cmd)
+
 callProcess :: RawFilePath -> [ByteString] -> IO ()
 callProcess cmd args = do
     pid <- forkProcess $ executeFile cmd True args Nothing
@@ -49,9 +53,9 @@ callProcess cmd args = do
         Just status -> case status of
             Exited exitCode -> case exitCode of
                 ExitSuccess -> return ()
-                ExitFailure _ -> die cmd
-            _ -> die cmd
-        Nothing -> die cmd
+                ExitFailure _ -> ioError processError
+            _ -> ioError processError
+        Nothing -> ioError processError
 
 callProcessSilent :: RawFilePath -> [ByteString] -> IO ExitCode
 callProcessSilent cmd args = do
@@ -62,8 +66,8 @@ callProcessSilent cmd args = do
     getProcessStatus True False pid >>= \case
         Just status -> case status of
             Exited exitCode -> return exitCode
-            _ -> die cmd
-        Nothing -> die cmd
+            _ -> ioError processError
+        Nothing -> ioError processError
 
 readProcess :: RawFilePath -> [ByteString] -> IO ByteString
 readProcess cmd args = do
