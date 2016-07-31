@@ -53,9 +53,11 @@ callProcess cmd args = do
         Just status -> case status of
             Exited exitCode -> case exitCode of
                 ExitSuccess -> return ()
-                ExitFailure _ -> ioError processError
-            _ -> ioError processError
-        Nothing -> ioError processError
+                ExitFailure _ -> failure
+            _ -> failure
+        Nothing -> failure
+  where
+    failure = ioError (processError cmd)
 
 callProcessSilent :: RawFilePath -> [ByteString] -> IO ExitCode
 callProcessSilent cmd args = do
@@ -66,8 +68,13 @@ callProcessSilent cmd args = do
     getProcessStatus True False pid >>= \case
         Just status -> case status of
             Exited exitCode -> return exitCode
-            _ -> ioError processError
-        Nothing -> ioError processError
+            _ -> failure
+        Nothing -> failure
+  where
+    failure = ioError (processError cmd)
+
+getContentsAndClose :: Handle -> IO ByteString
+getContentsAndClose h = B.hGetContents h <* hClose h
 
 readProcess :: RawFilePath -> [ByteString] -> IO ByteString
 readProcess cmd args = do
@@ -79,8 +86,6 @@ readProcess cmd args = do
         executeFile cmd True args Nothing
     closeFd fd1
     fdToHandle fd0 >>= getContentsAndClose
-  where
-    getContentsAndClose h = B.hGetContents h <* hClose h
 
 readProcessEither
     :: RawFilePath -> [ByteString]
@@ -98,15 +103,15 @@ readProcessEither cmd args = do
         executeFile cmd True args Nothing
     closeFd fd1
     closeFd efd1
-    content <- fdToHandle fd0 >>= B.hGetContents
+    content <- fdToHandle fd0 >>= getContentsAndClose
+    let failure = fmap Left $ fdToHandle efd0 >>= getContentsAndClose
     getProcessStatus True False pid >>= \case
         Just status -> case status of
             Exited exitCode -> case exitCode of
                 ExitSuccess -> return $ Right content
-                ExitFailure _ -> fmap Left $
-                    fdToHandle efd0 >>= B.hGetContents
-            _ -> die cmd
-        Nothing -> die cmd
+                ExitFailure _ -> failure
+            _ -> failure
+        Nothing -> failure
 
 getDirectoryFiles :: RawFilePath -> IO [RawFilePath]
 getDirectoryFiles dirPath = bracket open close repeatRead
