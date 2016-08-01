@@ -1,18 +1,27 @@
--- The 'unix' module provides 'RawFilePath'-variants of all functions, but
--- higher-level wrappers of it such as 'directory' or 'process' doesn't.
--- This module provides it.
-
 {-# language LambdaCase #-}
+
+-- |
+-- Module      : System.RawFilePath
+-- Copyright   : (c) Kinoru 2015-2016
+-- License     : BSD-style
+--
+-- Maintainer  : xkinoru@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
+--
+-- Higher-level API for the 'RawFilePath'-variants of functions in the 'unix'
+-- module.
 
 module System.RawFilePath
     ( RawFilePath
+    -- * Process
     , callProcess
     , callProcessSilent
     , readProcess
     , readProcessEither
+    -- * Directory
     , getDirectoryFiles
-    , getDirectoryFilesR
-    , getDirectoryFilesSuffix
+    , getDirectoryFilesRecursive
     , copyFile
     , getHomeDirectory
     , getAppDirectory
@@ -20,8 +29,6 @@ module System.RawFilePath
     , directoryExist
     , changeWorkingDirectory
     , tryRemoveFile
-    , (</>)
-    , filename
     ) where
 
 import Data.Monoid
@@ -38,15 +45,20 @@ import System.Exit (ExitCode(..), exitFailure)
 import Foreign.Marshal.Alloc (allocaBytes)
 import System.Posix.ByteString
 
-infixr 5  </>
-(</>) :: RawFilePath -> RawFilePath -> RawFilePath
-a </> b = mconcat [a, "/", b]
-
 processError :: RawFilePath -> IOError
 processError cmd = mkIOError userErrorType
     ("calling process " <> show cmd) Nothing (Just $ show cmd)
 
-callProcess :: RawFilePath -> [ByteString] -> IO ()
+-- | Creates a new process to run the specified command with the given
+-- arguments, and waits for it to finish. Throws an exception if the process
+-- returns a nonzero exit code.
+--
+-- > *System.RawFilePath> callProcess "ls" ["-a", "src"]
+-- > .  ..  System
+callProcess
+    :: RawFilePath -- ^ Command to run
+    -> [ByteString] -- ^ Command arguments
+    -> IO ()
 callProcess cmd args = do
     pid <- forkProcess $ executeFile cmd True args Nothing
     getProcessStatus True False pid >>= \case
@@ -59,7 +71,12 @@ callProcess cmd args = do
   where
     failure = ioError (processError cmd)
 
-callProcessSilent :: RawFilePath -> [ByteString] -> IO ExitCode
+-- | Same as 'callProcess' except the process will not write anything to
+-- stdout or stderr.
+callProcessSilent
+    :: RawFilePath -- ^ Command to run
+    -> [ByteString] -- ^ Command arguments
+    -> IO ExitCode
 callProcessSilent cmd args = do
     pid <- forkProcess $ do
         closeFd stdOutput
@@ -76,7 +93,14 @@ callProcessSilent cmd args = do
 getContentsAndClose :: Handle -> IO ByteString
 getContentsAndClose h = B.hGetContents h <* hClose h
 
-readProcess :: RawFilePath -> [ByteString] -> IO ByteString
+-- | Runs a command, reads its standard output strictly, blocking until the process terminates, and returns the output as 'ByteString'.
+--
+-- > *System.RawFilePath> readProcess "date" ["+%s"]
+-- > "1469999314\n"
+readProcess
+    :: RawFilePath -- ^ Command to run
+    -> [ByteString] -- ^ Command arguments
+    -> IO ByteString -- ^ The output from the command
 readProcess cmd args = do
     (fd0, fd1) <- createPipe
     pid <- forkProcess $ do
@@ -87,9 +111,19 @@ readProcess cmd args = do
     closeFd fd1
     fdToHandle fd0 >>= getContentsAndClose
 
+-- | A \'safer\' approach to 'readProcess'. Depending on the exit status of
+-- the process, this function will return output either from stderr or stdout.
+--
+-- > *System.RawFilePath> readProcessEither "date" ["%s"]
+-- > Left "date: invalid date \226\128\152%s\226\128\153\n"
+-- > *System.RawFilePath> readProcessEither "date" ["+%s"]
+-- > Right "1469999817\n"
 readProcessEither
-    :: RawFilePath -> [ByteString]
-    -> IO (Either ByteString ByteString)
+    :: RawFilePath -- ^ Command to run
+    -> [ByteString] -- ^ Command arguments
+    -> IO (Either ByteString ByteString) -- ^ Either the stedrr output from
+    -- the command if it finished with a nonzero exit code, or the stdout data
+    -- if it finished normally.
 readProcessEither cmd args = do
     (fd0, fd1) <- createPipe
     (efd0, efd1) <- createPipe
@@ -113,7 +147,13 @@ readProcessEither cmd args = do
             _ -> failure
         Nothing -> failure
 
-getDirectoryFiles :: RawFilePath -> IO [RawFilePath]
+-- | Get a list of files in the specified directory.
+--
+-- > *System.RawFilePath> getDirectoryFiles "src"
+-- > ["..","System","."]
+getDirectoryFiles
+    :: RawFilePath -- ^ The path of directory to inspect
+    -> IO [RawFilePath] -- ^ A list of files in the directory
 getDirectoryFiles dirPath = bracket open close repeatRead
   where
     open = openDirStream dirPath
@@ -124,8 +164,15 @@ getDirectoryFiles dirPath = bracket open close repeatRead
             rest <- repeatRead stream
             return $ d : rest
 
-getDirectoryFilesR :: RawFilePath -> IO [RawFilePath]
-getDirectoryFilesR path = do
+-- | Recursively get all files in all subdirectories of the specified
+-- directory.
+--
+-- > *System.RawFilePath> getDirectoryFilesRecursive "src"
+-- > ["src/System/RawFilePath.hs"]
+getDirectoryFilesRecursive
+    :: RawFilePath -- ^ The path of directory to inspect
+    -> IO [RawFilePath] -- ^ A list of relative paths
+getDirectoryFilesRecursive path = do
     names <- map (path </>) . filter (\x -> x /= ".." && x /= ".") <$>
         getDirectoryFiles path
     inspectedNames <- mapM inspect names
@@ -133,18 +180,7 @@ getDirectoryFilesR path = do
   where
     inspect :: RawFilePath -> IO [RawFilePath]
     inspect p = fmap isDirectory (getFileStatus p) >>= \i -> if i
-        then getDirectoryFilesR p else return [p]
-
-getDirectoryFilesSuffix :: RawFilePath -> ByteString -> IO [RawFilePath]
-getDirectoryFilesSuffix dirPath suffix = bracket open close repeatRead
-  where
-    open = openDirStream dirPath
-    close = closeDirStream
-    repeatRead stream = do
-        d <- readDirStream stream
-        if B.length d == 0 then return [] else do
-            rest <- repeatRead stream
-            return $ (if suffix `B.isSuffixOf` d then (d :) else id) rest
+        then getDirectoryFilesRecursive p else return [p]
 
 defaultFlags :: OpenFileFlags
 defaultFlags = OpenFileFlags
@@ -159,7 +195,11 @@ defaultFlags = OpenFileFlags
 bufferSize :: Int
 bufferSize = 4096
 
-copyFile :: RawFilePath -> RawFilePath -> IO ()
+-- | Copy a file from the source path to the destination path.
+copyFile
+    :: RawFilePath -- ^ The source path
+    -> RawFilePath -- ^ The destination path
+    -> IO ()
 copyFile srcPath tgtPath = do
     bracket ropen hClose $ \hi ->
         bracket topen hClose $ \ho ->
@@ -175,8 +215,8 @@ copyFile srcPath tgtPath = do
             hPutBuf ho buffer count
             copyContents hi ho buffer
 
--- A function that "tries" to remove a file.
--- If the file does not exist, nothing happens.
+-- | A function that "tries" to remove a file. If the file does not exist,
+-- nothing happens.
 tryRemoveFile :: RawFilePath -> IO ()
 tryRemoveFile path = catchIOError (removeLink path) $
     \e -> unless (isDoesNotExistError e) $ ioError e
@@ -198,5 +238,7 @@ directoryExist path = fileExist path >>= \i -> if i
     then isDirectory <$> getFileStatus path
     else return False
 
-filename :: RawFilePath -> RawFilePath
-filename = snd . B.spanEnd (0x2F /=)
+-- An extremely simplistic approach for path concatenation.
+infixr 5  </>
+(</>) :: RawFilePath -> RawFilePath -> RawFilePath
+a </> b = mconcat [a, "/", b]
