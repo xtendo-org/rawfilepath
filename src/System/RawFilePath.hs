@@ -138,14 +138,14 @@ readProcessEither cmd args = do
     closeFd fd1
     closeFd efd1
     content <- fdToHandle fd0 >>= getContentsAndClose
-    let failure = fmap Left $ fdToHandle efd0 >>= getContentsAndClose
+    err <- fdToHandle efd0 >>= getContentsAndClose
     getProcessStatus True False pid >>= \case
         Just status -> case status of
             Exited exitCode -> case exitCode of
                 ExitSuccess -> return $ Right content
-                ExitFailure _ -> failure
-            _ -> failure
-        Nothing -> failure
+                ExitFailure _ -> return $ Left err
+            _ -> return $ Left err
+        Nothing -> return $ Left err
 
 -- | Get a list of files in the specified directory.
 --
