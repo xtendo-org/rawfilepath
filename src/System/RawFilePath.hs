@@ -109,7 +109,8 @@ readProcess cmd args = do
         void $ dupTo fd1 stdOutput
         executeFile cmd True args Nothing
     closeFd fd1
-    fdToHandle fd0 >>= getContentsAndClose
+    (fdToHandle fd0 >>= getContentsAndClose) <*
+        getProcessStatus True False pid
 
 -- | A \'safer\' approach to 'readProcess'. Depending on the exit status of
 -- the process, this function will return output either from stderr or stdout.
