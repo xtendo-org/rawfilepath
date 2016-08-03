@@ -16,7 +16,9 @@ extra-source-files:
 
 library
   hs-source-dirs:      src
-  exposed-modules:     System.RawFilePath
+  exposed-modules:
+    Data.ByteString.RawFilePath,
+    System.RawFilePath
   build-depends:
     bytestring,
     unix,
