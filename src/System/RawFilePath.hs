@@ -2,7 +2,7 @@
 
 -- |
 -- Module      : System.RawFilePath
--- Copyright   : (c) Kinoru 2015-2016
+-- Copyright   : (c) Kinoru 2016
 -- License     : BSD-style
 --
 -- Maintainer  : xkinoru@gmail.com
@@ -24,10 +24,9 @@ module System.RawFilePath
     , getDirectoryFilesRecursive
     , copyFile
     , getHomeDirectory
-    , getAppDirectory
-    , fileExist
-    , directoryExist
-    , changeWorkingDirectory
+    , doesFileExist
+    , doesDirectoryExist
+    , setCurrentDirectory
     , tryRemoveFile
     ) where
 
@@ -40,7 +39,7 @@ import qualified Data.ByteString as B
 
 import System.IO
 import System.IO.Error
-import System.Exit (ExitCode(..), exitFailure)
+import System.Exit (ExitCode(..))
 
 import Foreign.Marshal.Alloc (allocaBytes)
 import System.Posix.ByteString
@@ -71,8 +70,8 @@ callProcess cmd args = do
   where
     failure = ioError (processError cmd)
 
--- | Same as 'callProcess' except the process will not write anything to
--- stdout or stderr.
+-- | Same as 'callProcess' except the child process will share the parent\'s
+-- stdout and stderr, meaning it won\'t print anything.
 callProcessSilent
     :: RawFilePath -- ^ Command to run
     -> [ByteString] -- ^ Command arguments
@@ -222,22 +221,28 @@ tryRemoveFile :: RawFilePath -> IO ()
 tryRemoveFile path = catchIOError (removeLink path) $
     \e -> unless (isDoesNotExistError e) $ ioError e
 
+-- | Returns the current user\'s home directory.
 getHomeDirectory :: IO RawFilePath
-getHomeDirectory = getEnv "HOME" >>= maybe (die noHomeErrMsg) return
+getHomeDirectory = getEnv "HOME" >>= maybe err return
+  where
+    err = ioError $ mkIOError doesNotExistErrorType errMsg Nothing Nothing
+    errMsg = "Environment variable $HOME"
 
-getAppDirectory :: RawFilePath -> IO RawFilePath
-getAppDirectory app = fmap (</> ".config" </> app) getHomeDirectory
+-- | Returns 'True' if the argument file exists and is not a directory.
+doesFileExist :: RawFilePath -> IO Bool
+doesFileExist path = fileExist path >>= \i -> if i
+    then not . isDirectory <$> getFileStatus path
+    else return False
 
-die :: ByteString -> IO a
-die msg = B.putStr ("Error: " <> msg) *> exitFailure
-
-noHomeErrMsg :: ByteString
-noHomeErrMsg = "This application requires the $HOME environment variable.\n"
-
-directoryExist :: RawFilePath -> IO Bool
-directoryExist path = fileExist path >>= \i -> if i
+-- | Returns 'True' if the argument file exists and is a directory.
+doesDirectoryExist :: RawFilePath -> IO Bool
+doesDirectoryExist path = fileExist path >>= \i -> if i
     then isDirectory <$> getFileStatus path
     else return False
+
+-- | Change the working directory to the given path.
+setCurrentDirectory :: RawFilePath -> IO ()
+setCurrentDirectory = changeWorkingDirectory
 
 -- An extremely simplistic approach for path concatenation.
 infixr 5  </>

@@ -1,3 +1,15 @@
+-- |
+-- Module      : Data.ByteString.RawFilePath
+-- Copyright   : (c) Kinoru 2016
+-- License     : BSD-style
+--
+-- Maintainer  : xkinoru@gmail.com
+-- Stability   : experimental
+-- Portability : POSIX
+--
+-- A variant of @Data.ByteString@ from the @bytestring@ package that provides
+-- file I/O functions with 'RawFilePath' instead of 'FilePath'.
+
 module Data.ByteString.RawFilePath
     ( readFile
     , writeFile
@@ -27,9 +39,12 @@ readFile path = withFile path ReadMode B.hGetContents
 writeFile :: RawFilePath -> ByteString -> IO ()
 writeFile path content = withFile path WriteMode (`B.hPut` content)
 
+-- | Append a 'ByteString' to a file at the 'RawFilePath'.
 appendFile :: RawFilePath -> ByteString -> IO ()
 appendFile path content = withFile path AppendMode (`B.hPut` content)
 
+-- | Acquire a file handle and perform an I/O action. The file will be closed
+-- on exit or when this I/O action throws an exception.
 withFile :: RawFilePath -> IOMode -> (Handle -> IO r) -> IO r
 withFile path ioMode = bracket (open >>= fdToHandle) hClose
   where
