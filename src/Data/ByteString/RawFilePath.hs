@@ -11,13 +11,13 @@
 -- file I/O functions with 'RawFilePath' instead of 'FilePath'.
 
 module Data.ByteString.RawFilePath
-    ( readFile
+    ( module B
+    , RawFilePath
+    , readFile
     , writeFile
     , appendFile
     , withFile
 
-    , module B
-    , RawFilePath
     ) where
 
 -- base modules
