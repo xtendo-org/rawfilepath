@@ -20,6 +20,7 @@ module System.RawFilePath
     , readProcess
     , readProcessEither
     -- * Directory
+    , listDirectory
     , getDirectoryFiles
     , getDirectoryFilesRecursive
     , copyFile
@@ -147,7 +148,18 @@ readProcessEither cmd args = do
             _ -> return $ Left err
         Nothing -> return $ Left err
 
--- | Get a list of files in the specified directory.
+-- | Get a list of files in the specified directory, excluding "." and ".."
+--
+-- > *System.RawFilePath> listDirectory "src"
+-- > ["..","System","."]
+listDirectory
+    :: RawFilePath -- ^ The path of directory to inspect
+    -> IO [RawFilePath] -- ^ A list of files in the directory
+listDirectory dirPath = filter f <$> getDirectoryFiles dirPath
+  where
+    f p = p /= "." && p /= ".."
+
+-- | Get a list of files in the specified directory, including "." and ".."
 --
 -- > *System.RawFilePath> getDirectoryFiles "src"
 -- > ["..","System","."]
