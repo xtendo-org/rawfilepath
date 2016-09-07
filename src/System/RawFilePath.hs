@@ -106,6 +106,7 @@ readProcess cmd args = do
     pid <- forkProcess $ do
         closeFd fd0
         closeFd stdOutput
+        closeFd stdError
         void $ dupTo fd1 stdOutput
         executeFile cmd True args Nothing
     closeFd fd1
