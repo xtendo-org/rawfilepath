@@ -1,9 +1,9 @@
 -- |
 -- Module      : Data.ByteString.RawFilePath
--- Copyright   : (c) Kinoru 2016
+-- Copyright   : (c) XT 2016
 -- License     : BSD-style
 --
--- Maintainer  : xkinoru@gmail.com
+-- Maintainer  : e@xtendo.org
 -- Stability   : experimental
 -- Portability : POSIX
 --
