@@ -16,7 +16,7 @@ Transition to `Text` and `ByteString` began, but even after a dazzling community
 
 To put a cherry on top of creaking, fuming, dragging, and littering pointers all over the heap space, `String` had another fantastic nature to serve as a file path data type: Encoding blindness. All functions that return `FilePath` would actually take a series of bytes returned by a syscall and somehow magically "decode" it into a `String` which is surprising because no encoding information was given. Of course there is no magic and it's an abject fail. `FilePath` just wouldn't work.
 
-In June 2015, three bright Haskell programmers came up with an elegant solution called the [Abstract FilePath Proposal] and met an immediate thunderous applause. Inspired by this enthusiasm, they further pursued the career of professional Haskell programming and focused on more interesting things. 16 months later, a programmer under the pseudonym XT got so fed up with the situation and released a package called `rawfilepath` out of pure evil intent.
+In June 2015, three bright Haskell programmers came up with an elegant solution called the [Abstract FilePath Proposal] and met an immediate thunderous applause. Inspired by this enthusiasm, they further pursued the career of professional Haskell programming and focused on more interesting things. 16 months later, a programmer under the pseudonym XT got so fed up with the situation and released a package called `rawfilepath` out of a purely selfish intent.
 
 ## So what is this?
 
