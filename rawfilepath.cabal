@@ -6,7 +6,7 @@ homepage:            https://github.com/xtendo-org/rawfilepath#readme
 license:             BSD3
 license-file:        LICENSE
 author:              XT
-maintainer:          xtendo@protonmail.com
+maintainer:          e@xtendo.org
 copyright:           2016 XT
 category:            System
 build-type:          Simple
