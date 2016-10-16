@@ -32,6 +32,10 @@ So I decided to start writing the `RawFilePath` version of those functions.
 - Lightweight library (under 400 total lines of code)
 - Available now
 
+## Documentation
+
+[API documentation of rawfilepath on Stackage](https://www.stackage.org/package/rawfilepath).
+
 ## To do
 
 `rawfilepath` is in an early stage, although major backwards-incompatible changes are unlikely to happen. We can probably port more system functions that are present in `process` or `directory`
