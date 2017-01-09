@@ -19,6 +19,11 @@ library
   exposed-modules:
     Data.ByteString.RawFilePath,
     System.RawFilePath
+  other-modules:
+    System.RawFilePath.Process.Internal
+  c-sources:
+    cbits/runProcess.c
+  include-dirs: include
   build-depends:
     bytestring,
     unix,
