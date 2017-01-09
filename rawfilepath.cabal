@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Use RawFilePath instead of FilePath
 description:         Please see README.md
 homepage:            https://github.com/xtendo-org/rawfilepath#readme
-license:             BSD3
+license:             Apache-2.0
 license-file:        LICENSE
 author:              XT
 maintainer:          e@xtendo.org
