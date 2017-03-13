@@ -20,7 +20,7 @@ library
     Data.ByteString.RawFilePath,
     System.RawFilePath
   other-modules:
-    System.RawFilePath.Process.Internal
+    System.Process.RawFilePath.Internal
   c-sources:
     cbits/runProcess.c
   include-dirs: include
