@@ -1,4 +1,4 @@
-module System.Process.RawFilePath.Internal where
+module System.Process.RawFilePath.Posix where
 
 import Foreign.C
 import Foreign.Ptr
