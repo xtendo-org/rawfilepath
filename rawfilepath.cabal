@@ -19,6 +19,7 @@ library
   exposed-modules:
     Data.ByteString.RawFilePath,
     System.RawFilePath
+    System.Process.RawFilePath.Common
   other-modules:
     System.Process.RawFilePath.Internal
   c-sources:
