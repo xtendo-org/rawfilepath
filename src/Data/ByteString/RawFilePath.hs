@@ -7,11 +7,11 @@
 -- Stability   : experimental
 -- Portability : POSIX
 --
--- A variant of @Data.ByteString@ from the @bytestring@ package that provides
--- file I/O functions with 'RawFilePath' instead of 'FilePath'.
+-- A drop-in replacement of @Data.ByteString@ from the @bytestring@ package
+-- that provides file I/O functions with 'RawFilePath' instead of 'FilePath'.
 
 module Data.ByteString.RawFilePath
-    ( module B
+    ( module Data.ByteString
     , RawFilePath
     , readFile
     , writeFile
@@ -29,19 +29,19 @@ import System.IO (IOMode(..), Handle, hClose)
 -- extra modules
 
 import System.Posix.ByteString
-import Data.ByteString as B hiding (readFile, writeFile, appendFile)
+import Data.ByteString hiding (readFile, writeFile, appendFile)
 
 -- | Read an entire file at the 'RawFilePath' strictly into a 'ByteString'.
 readFile :: RawFilePath -> IO ByteString
-readFile path = withFile path ReadMode B.hGetContents
+readFile path = withFile path ReadMode hGetContents
 
 -- | Write a 'ByteString' to a file at the 'RawFilePath'.
 writeFile :: RawFilePath -> ByteString -> IO ()
-writeFile path content = withFile path WriteMode (`B.hPut` content)
+writeFile path content = withFile path WriteMode (`hPut` content)
 
 -- | Append a 'ByteString' to a file at the 'RawFilePath'.
 appendFile :: RawFilePath -> ByteString -> IO ()
-appendFile path content = withFile path AppendMode (`B.hPut` content)
+appendFile path content = withFile path AppendMode (`hPut` content)
 
 -- | Acquire a file handle and perform an I/O action. The file will be closed
 -- on exit or when this I/O action throws an exception.
