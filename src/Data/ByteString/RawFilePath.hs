@@ -1,7 +1,7 @@
 -- |
 -- Module      : Data.ByteString.RawFilePath
 -- Copyright   : (c) XT 2016
--- License     : BSD-style
+-- License     : Apache 2.0
 --
 -- Maintainer  : e@xtendo.org
 -- Stability   : experimental
