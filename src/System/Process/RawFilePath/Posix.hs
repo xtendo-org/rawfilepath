@@ -23,7 +23,9 @@ import Control.Exception
 import Control.Monad
 import Data.Bits
 import Data.Monoid
+import Data.Word
 import Foreign.C
+import Foreign.ForeignPtr
 import Foreign.Marshal
 import Foreign.Ptr
 import Foreign.Storable
@@ -33,7 +35,7 @@ import System.IO.Unsafe
 
 -- extra modules
 
-import Data.ByteString (ByteString)
+import Data.ByteString.Internal (ByteString(..), memcpy)
 import System.Posix.ByteString.FilePath
 import System.Posix.Internals hiding (withFilePath)
 import System.Posix.Process.Internals ( pPrPr_disableITimers, c_execvpe )
@@ -59,13 +61,29 @@ closePHANDLE _ = return ()
 -- ----------------------------------------------------------------------------
 -- Utils
 
-withManyByteString :: [ByteString] -> ([CString] -> IO a) -> IO a
-withManyByteString = undefined
+withManyByteString :: [ByteString] -> (Ptr CString -> IO a) -> IO a
+withManyByteString bs action =
+  allocaBytes wholeLength $ \ buf ->
+  allocaBytes ptrLength $ \ cs -> do
+    copyByteStrings bs buf cs
+    action (castPtr cs)
+  where
+    ptrLength = (length bs + 1) * sizeOf (undefined :: Ptr CString)
+    wholeLength = sum (map (\ (PS _ _ l) -> l + 1) bs)
+
+copyByteStrings :: [ByteString] -> Ptr Word8 -> Ptr (Ptr Word8) -> IO ()
+copyByteStrings [] _ cs = poke cs nullPtr
+copyByteStrings (PS fp o l : xs) buf cs = withForeignPtr fp $ \ p -> do
+    memcpy buf (p `plusPtr` o) (fromIntegral l)
+    pokeByteOff buf l (0 :: Word8)
+    poke cs (buf :: Ptr Word8)
+    copyByteStrings xs (buf `plusPtr` (l + 1))
+        (cs `plusPtr` sizeOf (undefined :: Ptr CString))
 
 withCEnvironment :: [(ByteString, ByteString)] -> (Ptr CString  -> IO a) -> IO a
 withCEnvironment envir act =
   let env' = map (\(name, val) -> name <> "=" <> val) envir
-  in withManyByteString env' (\pEnv -> withArray0 nullPtr pEnv act)
+  in withManyByteString env' act
 
 -- -----------------------------------------------------------------------------
 -- POSIX runProcess with signal handling in the child
@@ -83,8 +101,7 @@ createProcessInternal ProcessConf{..}
     maybeWith withFilePath cwd $ \pWorkDir ->
     maybeWith with childGroup $ \pChildGroup ->
     maybeWith with childUser $ \pChildUser ->
-    withManyByteString cmdargs $ \cstrs ->
-    withArray0 nullPtr cstrs $ \pargs -> do
+    withManyByteString cmdargs $ \pargs -> do
 
         fdin  <- mbFd fdStdin  cfgStdin
         fdout <- mbFd fdStdout cfgStdout

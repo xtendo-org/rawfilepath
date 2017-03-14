@@ -106,13 +106,6 @@ processStderr Process{..} = fromMaybe err procStderr
   where
     err = error "This can't happen: stderr is CreatePipe but missing"
 
--- startProcess
---     :: ProcessConf stdin stdout stderr
---     -> IO (Process stdin stdout stderr)
--- startProcess ProcessConf{..} = do
---     _ <- undefined
---     return (Process Nothing Nothing Nothing)
-
 data CreatePipe = CreatePipe
 data Inherit = Inherit
 data NoStream = NoStream
