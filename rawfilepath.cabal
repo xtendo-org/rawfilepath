@@ -21,7 +21,7 @@ library
     System.RawFilePath
     System.Process.RawFilePath.Common
   other-modules:
-    System.Process.RawFilePath.Internal
+    System.Process.RawFilePath.Posix
   c-sources:
     cbits/runProcess.c
   include-dirs: include
