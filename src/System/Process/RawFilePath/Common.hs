@@ -14,7 +14,6 @@ module System.Process.RawFilePath.Common
     , UseHandle(..)
 
     , PHANDLE
-    , ProcessHandle(..)
     , ProcessHandle__(..)
     , modifyProcessHandle
     , withProcessHandle
@@ -86,9 +85,12 @@ data ProcessConf stdin stdout stderr = ProcessConf
     }
 
 data Process stdin stdout stderr = Process
-    { procStdin :: Maybe Handle
-    , procStdout :: Maybe Handle
-    , procStderr :: Maybe Handle
+    { procStdin         :: Maybe Handle
+    , procStdout        :: Maybe Handle
+    , procStderr        :: Maybe Handle
+    , phandle           :: !(MVar ProcessHandle__)
+    , mbDelegateCtlc    :: !Bool
+    , waitpidLock       :: !(MVar ())
     }
 
 processStdin :: Process CreatePipe stdout stderr -> Handle
@@ -143,20 +145,16 @@ type PHANDLE = CPid
 data ProcessHandle__ = OpenHandle PHANDLE
                      | OpenExtHandle PHANDLE PHANDLE PHANDLE
                      | ClosedHandle ExitCode
-data ProcessHandle
-  = ProcessHandle { phandle          :: !(MVar ProcessHandle__)
-                  , mbDelegateCtlc :: !Bool
-                  , waitpidLock      :: !(MVar ())
-                  }
 
 modifyProcessHandle
-        :: ProcessHandle
-        -> (ProcessHandle__ -> IO (ProcessHandle__, a))
-        -> IO a
-modifyProcessHandle (ProcessHandle m _ _) = modifyMVar m
+    :: Process stdin stdout stderr
+    -> (ProcessHandle__ -> IO (ProcessHandle__, a))
+    -> IO a
+modifyProcessHandle p = modifyMVar (phandle p)
 
-withProcessHandle :: ProcessHandle -> (ProcessHandle__ -> IO a) -> IO a
-withProcessHandle (ProcessHandle m _ _)= withMVar m
+withProcessHandle
+    :: Process stdin stdout stderr -> (ProcessHandle__ -> IO a) -> IO a
+withProcessHandle p = withMVar (phandle p)
 
 fdStdin, fdStdout, fdStderr :: FD
 fdStdin  = 0

@@ -3,8 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE LambdaCase #-}
 module System.Process.RawFilePath.Posix
-    ( mkProcessHandle
-    , createProcessInternal
+    ( createProcessInternal
     , withCEnvironment
     , closePHANDLE
     , startDelegateControlC
@@ -49,12 +48,6 @@ import System.Process.RawFilePath.Common
 
 #include "processFlags.h"
 
-mkProcessHandle :: PHANDLE -> Bool -> IO ProcessHandle
-mkProcessHandle p mbDelegateCtlc = do
-  m <- newMVar (OpenHandle p)
-  l <- newMVar ()
-  return (ProcessHandle m mbDelegateCtlc l)
-
 closePHANDLE :: PHANDLE -> IO ()
 closePHANDLE _ = return ()
 
@@ -91,7 +84,7 @@ withCEnvironment envir act =
 createProcessInternal
     :: (StreamSpec stdin, StreamSpec stdout, StreamSpec stderr)
     => ProcessConf stdin stdout stderr
-    -> IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
+    -> IO (Process stdin stdout stderr)
 createProcessInternal ProcessConf{..}
   = alloca $ \ pfdStdInput  ->
     alloca $ \ pfdStdOutput ->
@@ -113,7 +106,7 @@ createProcessInternal ProcessConf{..}
         -- Since blocking/unblocking of signals is a global state
         -- operation, we better ensure mutual exclusion of calls to
         -- runInteractiveProcess().
-        proc_handle <- withMVar runInteractiveProcessLock $ \_ ->
+        procHandle <- withMVar runInteractiveProcessLock $ \_ ->
           c_runInteractiveProcess pargs pWorkDir pEnv
             fdin fdout fderr
             pfdStdInput pfdStdOutput pfdStdError
@@ -125,19 +118,20 @@ createProcessInternal ProcessConf{..}
             .|.(if newSession then RUN_PROCESS_NEW_SESSION else 0))
             pFailedDoing
 
-        when (proc_handle == -1) $ do
+        when (procHandle == -1) $ do
             cFailedDoing <- peek pFailedDoing
             failedDoing <- peekCString cFailedDoing
             when delegateCtlc stopDelegateControlC
             -- TODO(XT): avoid String
             throwErrno (show (head cmdargs) ++ ": " ++ failedDoing)
 
-        hndStdInput  <- mbPipe cfgStdin  pfdStdInput  WriteMode
-        hndStdOutput <- mbPipe cfgStdout pfdStdOutput ReadMode
-        hndStdError  <- mbPipe cfgStderr pfdStdError  ReadMode
+        hIn  <- mbPipe cfgStdin  pfdStdInput  WriteMode
+        hOut <- mbPipe cfgStdout pfdStdOutput ReadMode
+        hErr <- mbPipe cfgStderr pfdStdError  ReadMode
 
-        ph <- mkProcessHandle proc_handle delegateCtlc
-        return (hndStdInput, hndStdOutput, hndStdError, ph)
+        mvarProcHandle <- newMVar (OpenHandle procHandle)
+        lock <- newMVar ()
+        return (Process hIn hOut hErr mvarProcHandle delegateCtlc lock)
 
 {-# NOINLINE runInteractiveProcessLock #-}
 runInteractiveProcessLock :: MVar ()
@@ -219,7 +213,7 @@ endDelegateControlC exitCode = do
 
 foreign import ccall unsafe "runInteractiveProcess"
   c_runInteractiveProcess
-    ::  Ptr CString
+    :: Ptr CString
     -> CString
     -> Ptr CString
     -> FD
