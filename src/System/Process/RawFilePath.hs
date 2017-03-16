@@ -1,9 +1,22 @@
 module System.Process.RawFilePath
     ( proc
+    , setStdin
+    , setStdout
+    , setStderr
+
     , startProcess
     , stopProcess
     , terminateProcess
     , waitForProcess
+
+    , processStdin
+    , processStdout
+    , processStderr
+
+    , CreatePipe(..)
+    , Inherit(..)
+    , NoStream(..)
+    , UseHandle(..)
     ) where
 
 -- base modules
@@ -32,6 +45,30 @@ proc cmd args = ProcessConf
     , childGroup = Nothing
     , childUser = Nothing
     }
+
+setStdin
+    :: (StreamSpec newStdin)
+    => ProcessConf oldStdin stdout stderr
+    -> newStdin
+    -> ProcessConf newStdin stdout stderr
+setStdin p newStdin = p { cfgStdin = newStdin }
+infix 4 `setStdin`
+
+setStdout
+    :: (StreamSpec newStdout)
+    => ProcessConf stdin oldStdout stderr
+    -> newStdout
+    -> ProcessConf stdin newStdout stderr
+setStdout p newStdout = p { cfgStdout = newStdout }
+infix 4 `setStdout`
+
+setStderr
+    :: (StreamSpec newStderr)
+    => ProcessConf stdin stdout oldStderr
+    -> newStderr
+    -> ProcessConf stdin stdout newStderr
+setStderr p newStderr = p { cfgStderr = newStderr }
+infix 4 `setStderr`
 
 startProcess
     :: (StreamSpec stdin, StreamSpec stdout, StreamSpec stderr)
