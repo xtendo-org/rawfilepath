@@ -1,9 +1,9 @@
 module System.Process.RawFilePath
-    ( startProcess
+    ( proc
+    , startProcess
     , stopProcess
     , terminateProcess
     , waitForProcess
-    , proc
     ) where
 
 -- base modules
@@ -15,6 +15,23 @@ import RawFilePath.Import hiding (ClosedHandle)
 import System.Process.RawFilePath.Common
 import System.Process.RawFilePath.Internal
 import System.Process.RawFilePath.Posix
+
+proc :: RawFilePath -> [ByteString] -> ProcessConf Inherit Inherit Inherit
+proc cmd args = ProcessConf
+    { cmdargs = cmd : args
+    , cwd = Nothing
+    , env = Nothing
+    , cfgStdin = Inherit
+    , cfgStdout = Inherit
+    , cfgStderr = Inherit
+    , closeFds = False
+    , createGroup = False
+    , delegateCtlc = False
+    , createNewConsole = False
+    , newSession = False
+    , childGroup = Nothing
+    , childUser = Nothing
+    }
 
 startProcess
     :: (StreamSpec stdin, StreamSpec stdout, StreamSpec stderr)
@@ -73,20 +90,3 @@ terminateProcess p = withProcessHandle p $ \ case
         return ()
         -- does not close the handle, we might want to try terminating it
         -- again, or get its exit code.
-
-proc :: RawFilePath -> [ByteString] -> ProcessConf Inherit Inherit Inherit
-proc cmd args = ProcessConf
-    { cmdargs = cmd : args
-    , cwd = Nothing
-    , env = Nothing
-    , cfgStdin = Inherit
-    , cfgStdout = Inherit
-    , cfgStderr = Inherit
-    , closeFds = False
-    , createGroup = False
-    , delegateCtlc = False
-    , createNewConsole = False
-    , newSession = False
-    , childGroup = Nothing
-    , childUser = Nothing
-    }
