@@ -19,8 +19,11 @@ library
   exposed-modules:
     Data.ByteString.RawFilePath,
     System.RawFilePath
-    System.Process.RawFilePath.Common
+    System.Process.RawFilePath
   other-modules:
+    RawFilePath.Import
+    System.Process.RawFilePath.Common
+    System.Process.RawFilePath.Internal
     System.Process.RawFilePath.Posix
   c-sources:
     cbits/runProcess.c
@@ -31,7 +34,11 @@ library
     base >= 4.7 && < 5
   default-language:    Haskell2010
   default-extensions:
+    BangPatterns
+    CPP
+    LambdaCase
     OverloadedStrings
+    RecordWildCards
 
 test-suite RawFilePath-test
   type:                exitcode-stdio-1.0

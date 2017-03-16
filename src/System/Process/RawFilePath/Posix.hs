@@ -1,7 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE LambdaCase #-}
 module System.Process.RawFilePath.Posix
     ( createProcessInternal
     , withCEnvironment
@@ -15,31 +11,16 @@ module System.Process.RawFilePath.Posix
     , createPipeInternalFd
     ) where
 
--- base modules
-
-import Control.Concurrent
-import Control.Exception
-import Control.Monad
-import Data.Bits
-import Data.Monoid
-import Data.Word
-import Foreign.C
-import Foreign.ForeignPtr
-import Foreign.Marshal
-import Foreign.Ptr
-import Foreign.Storable
-import GHC.IO.Exception
-import System.IO
-import System.IO.Unsafe
+import RawFilePath.Import
 
 -- extra modules
 
 import Data.ByteString.Internal (ByteString(..), memcpy)
-import System.Posix.ByteString.FilePath
+import System.Posix.ByteString.FilePath (withFilePath)
 import System.Posix.Internals hiding (withFilePath)
 import System.Posix.Process.Internals ( pPrPr_disableITimers, c_execvpe )
-import System.Posix.Signals as Sig
-import System.Posix.Types
+import System.Posix.Signals
+import qualified System.Posix.Signals as Sig
 import qualified System.Posix.IO as Posix
 
 -- local modules

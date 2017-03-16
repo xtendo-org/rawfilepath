@@ -1,6 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module System.Process.RawFilePath.Common
     ( Process(..)
     , ProcessConf(..)
@@ -23,23 +20,11 @@ module System.Process.RawFilePath.Common
     , mbPipe
     ) where
 
-import Control.Concurrent
-import Data.ByteString (ByteString)
-import Data.Maybe
-import Data.Typeable
-import Foreign.Ptr
-import Foreign.Storable
-import GHC.IO.Device
-import GHC.IO.Encoding
-import GHC.IO.Exception
-import GHC.IO.Handle.FD
-import GHC.IO.Handle.Internals
-import GHC.IO.Handle.Types hiding (ClosedHandle)
-import GHC.IO.IOMode
-import System.IO.Error
-import System.Posix.ByteString (RawFilePath)
-import System.Posix.Internals
-import System.Posix.Types
+import RawFilePath.Import
+
+-- extra modules
+
+import System.Posix.Internals (FD)
 import qualified GHC.IO.FD as FD
 
 -- Original declarations
