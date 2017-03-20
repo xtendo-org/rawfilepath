@@ -7,7 +7,7 @@ module System.Process.RawFilePath.Posix
     , stopDelegateControlC
     , c_execvpe
     , pPrPr_disableITimers
-    , createPipeInternal
+    , createPipe
     , createPipeInternalFd
     ) where
 
@@ -63,7 +63,7 @@ withCEnvironment envir act =
 -- POSIX runProcess with signal handling in the child
 
 createProcessInternal
-    :: (StreamSpec stdin, StreamSpec stdout, StreamSpec stderr)
+    :: (StreamType stdin, StreamType stdout, StreamType stderr)
     => ProcessConf stdin stdout stderr
     -> IO (Process stdin stdout stderr)
 createProcessInternal ProcessConf{..}
@@ -210,8 +210,8 @@ foreign import ccall unsafe "runInteractiveProcess"
     -> Ptr CString
     -> IO PHANDLE
 
-createPipeInternal :: IO (Handle, Handle)
-createPipeInternal = do
+createPipe :: IO (Handle, Handle)
+createPipe = do
     (readfd, writefd) <- Posix.createPipe
     readh <- Posix.fdToHandle readfd
     writeh <- Posix.fdToHandle writefd

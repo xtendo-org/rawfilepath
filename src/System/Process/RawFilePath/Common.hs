@@ -1,14 +1,20 @@
 module System.Process.RawFilePath.Common
     ( Process(..)
     , ProcessConf(..)
+    , proc
     , processStdin
     , processStdout
     , processStderr
-    , StreamSpec(..)
+    , StreamType
+    , mbFd
+    , willCreateHandle
     , CreatePipe(..)
     , Inherit(..)
     , NoStream(..)
     , UseHandle(..)
+    , setStdin
+    , setStdout
+    , setStderr
 
     , PHANDLE
     , ProcessHandle__(..)
@@ -29,7 +35,8 @@ import qualified GHC.IO.FD as FD
 
 -- Original declarations
 
--- | The process configuration that is needed for creating new processes.
+-- | The process configuration that is needed for creating new processes. Use
+-- 'proc' to make one.
 data ProcessConf stdin stdout stderr = ProcessConf
     { cmdargs :: [ByteString]
     -- ^ Executable & arguments, or shell command
@@ -69,6 +76,56 @@ data ProcessConf stdin stdout stderr = ProcessConf
     -- Default: @Nothing@
     }
 
+-- | Create a process configuration with the default settings.
+proc
+    :: RawFilePath -- ^ Command to run
+    -> [ByteString] -- ^ Arguments to the command
+    -> ProcessConf Inherit Inherit Inherit
+proc cmd args = ProcessConf
+    { cmdargs = cmd : args
+    , cwd = Nothing
+    , env = Nothing
+    , cfgStdin = Inherit
+    , cfgStdout = Inherit
+    , cfgStderr = Inherit
+    , closeFds = False
+    , createGroup = False
+    , delegateCtlc = False
+    , createNewConsole = False
+    , newSession = False
+    , childGroup = Nothing
+    , childUser = Nothing
+    }
+
+-- | Control how the standard input of the process will be initialized.
+setStdin
+    :: (StreamType newStdin)
+    => ProcessConf oldStdin stdout stderr
+    -> newStdin
+    -> ProcessConf newStdin stdout stderr
+setStdin p newStdin = p { cfgStdin = newStdin }
+infix 4 `setStdin`
+
+-- | Control how the standard output of the process will be initialized.
+setStdout
+    :: (StreamType newStdout)
+    => ProcessConf stdin oldStdout stderr
+    -> newStdout
+    -> ProcessConf stdin newStdout stderr
+setStdout p newStdout = p { cfgStdout = newStdout }
+infix 4 `setStdout`
+
+-- | Control how the standard error of the process will be initialized.
+setStderr
+    :: (StreamType newStderr)
+    => ProcessConf stdin stdout oldStderr
+    -> newStderr
+    -> ProcessConf stdin stdout newStderr
+setStderr p newStderr = p { cfgStderr = newStderr }
+infix 4 `setStderr`
+
+-- | The process type. The three type variables denote how the standard stream
+-- was initialized.
 data Process stdin stdout stderr = Process
     { procStdin         :: Maybe Handle
     , procStdout        :: Maybe Handle
@@ -93,24 +150,39 @@ processStderr Process{..} = fromMaybe err procStderr
   where
     err = error "This can't happen: stderr is CreatePipe but missing"
 
-data CreatePipe = CreatePipe
-data Inherit = Inherit
-data NoStream = NoStream
-data UseHandle = UseHandle Handle
+-- | Create a new pipe for the stream. You get a new 'Handle'.
+data CreatePipe = CreatePipe deriving Show
+-- | Inherit the parent (current) process handle. The child will share the
+-- stream. For example, if the child writes anything to stdout, it will all go
+-- to the parent's stdout.
+data Inherit = Inherit deriving Show
+-- | No stream handle will be passed. Use when you don't want to communicate
+-- with a stream. For example, to run something silently.
+data NoStream = NoStream deriving Show
+-- | Use the supplied 'Handle'.
+data UseHandle = UseHandle Handle deriving Show
 
-class StreamSpec c where
+-- | The class of types that determine the standard stream of a sub-process.
+-- You can decide how to initialize the standard streams (stdin, stdout, and
+-- stderr) of a sub-process with the instances of this class.
+class StreamType c where
     mbFd :: FD -> c -> IO FD
     willCreateHandle :: c -> Bool
-instance StreamSpec CreatePipe where
+#if __GLASGOW_HASKELL__ >= 780
+    mbFd = undefined
+    willCreateHandle = undefined
+    {-# MINIMAL #-}
+#endif
+instance StreamType CreatePipe where
     mbFd _ _ = return (-1)
     willCreateHandle _ = True
-instance StreamSpec Inherit where
+instance StreamType Inherit where
     mbFd std _ = return std
     willCreateHandle _ = False
-instance StreamSpec NoStream where
+instance StreamType NoStream where
     mbFd _ _ = return (-2)
     willCreateHandle _ = False
-instance StreamSpec UseHandle where
+instance StreamType UseHandle where
     mbFd _std (UseHandle hdl) =
         withHandle "" hdl $ \Handle__{haDevice=dev,..} -> case cast dev of
             Just fd -> do
@@ -146,7 +218,7 @@ fdStdin  = 0
 fdStdout = 1
 fdStderr = 2
 
-mbPipe :: StreamSpec c => c -> Ptr FD -> IOMode -> IO (Maybe Handle)
+mbPipe :: StreamType c => c -> Ptr FD -> IOMode -> IO (Maybe Handle)
 mbPipe streamConf pfd  mode = if willCreateHandle streamConf
     then fmap Just (pfdToHandle pfd mode)
     else return Nothing

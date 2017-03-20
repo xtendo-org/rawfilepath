@@ -1,27 +1,86 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  System.Process.RawFilePath
+-- Copyright   :  (C) XT et al. 2017
+-- License     :  BSD-style (see the file LICENSE)
+--
+-- Maintainer  :  e@xtendo.org
+-- Stability   :  experimental
+-- Portability :  POSIX
+--
+-- Welcome to @System.Process.RawFilePath@, a small part of the glorious
+-- crusade of the Haskell community to purge 'String' for the Greater Good.
+--
+-- With this module, you can create (and interact with) sub-processes without
+-- the encoding problem of 'String'. The command and its arguments, all
+-- 'ByteString's, never get converted from/to 'String' internally on its way
+-- to the actual syscall. It also avoids the time/space waste of 'String'.
+--
+-- The interface, unlike the original @process@ package, uses types to prevent
+-- unnecessary runtime errors when obtaining 'Handle's. This is inspired by
+-- the @typed-process@ package which is awesome, although this module is much
+-- simpler; it doesn't introduce any new requirement of language extension or
+-- library package (for the sake of portability).
+--
+-- 'Handle' (accessible with 'processStdin', 'processStdout', and
+-- 'processStderr') is what you can use to interact with the sub-process. For
+-- example, use 'hGetContents' from "Data.ByteString" to read from a 'Handle'
+-- as a 'ByteString'.
+--
+-- == Example
+--
+-- This is the type of what you get with 'startProcess'. You can stop it with
+-- 'stopProcess', or wait (block) for it to exit with 'waitForProcess'.
+--
+-----------------------------------------------------------------------------
+
+
 module System.Process.RawFilePath
-    ( proc
-    , setStdin
-    , setStdout
-    , setStderr
+    (
+    -- ** Example
+    --
+    -- | blah blah blah
+    --
+    -- $example
+    --
+    -- ** Configuring process
+    -- $configuring
+      ProcessConf
+    , proc
 
-    , startProcess
-    , stopProcess
-    , terminateProcess
-    , waitForProcess
-
-    , processStdin
-    , processStdout
-    , processStderr
-
+    -- *** Configuring process standard streams
+    , StreamType
     , CreatePipe(..)
     , Inherit(..)
     , NoStream(..)
     , UseHandle(..)
+    , setStdin
+    , setStdout
+    , setStderr
+
+    -- ** Running process
+    , Process
+    , startProcess
+
+    -- ** Obtaining process streams
+    , processStdin
+    , processStdout
+    , processStderr
+
+    -- ** Process completion
+    , stopProcess
+    , terminateProcess
+    , waitForProcess
+
     ) where
 
 -- base modules
 
 import RawFilePath.Import hiding (ClosedHandle)
+
+-- extra modules
+
+import Data.ByteString (hGetContents) -- imported for documentation
 
 -- local modules
 
@@ -29,58 +88,21 @@ import System.Process.RawFilePath.Common
 import System.Process.RawFilePath.Internal
 import System.Process.RawFilePath.Posix
 
-proc :: RawFilePath -> [ByteString] -> ProcessConf Inherit Inherit Inherit
-proc cmd args = ProcessConf
-    { cmdargs = cmd : args
-    , cwd = Nothing
-    , env = Nothing
-    , cfgStdin = Inherit
-    , cfgStdout = Inherit
-    , cfgStderr = Inherit
-    , closeFds = False
-    , createGroup = False
-    , delegateCtlc = False
-    , createNewConsole = False
-    , newSession = False
-    , childGroup = Nothing
-    , childUser = Nothing
-    }
-
-setStdin
-    :: (StreamSpec newStdin)
-    => ProcessConf oldStdin stdout stderr
-    -> newStdin
-    -> ProcessConf newStdin stdout stderr
-setStdin p newStdin = p { cfgStdin = newStdin }
-infix 4 `setStdin`
-
-setStdout
-    :: (StreamSpec newStdout)
-    => ProcessConf stdin oldStdout stderr
-    -> newStdout
-    -> ProcessConf stdin newStdout stderr
-setStdout p newStdout = p { cfgStdout = newStdout }
-infix 4 `setStdout`
-
-setStderr
-    :: (StreamSpec newStderr)
-    => ProcessConf stdin stdout oldStderr
-    -> newStderr
-    -> ProcessConf stdin stdout newStderr
-setStderr p newStderr = p { cfgStderr = newStderr }
-infix 4 `setStderr`
-
+-- | Start a new sub-process with the given configuration.
 startProcess
-    :: (StreamSpec stdin, StreamSpec stdout, StreamSpec stderr)
+    :: (StreamType stdin, StreamType stdout, StreamType stderr)
     => ProcessConf stdin stdout stderr
     -> IO (Process stdin stdout stderr)
 startProcess = createProcessInternal
 
+-- | Stop a sub-process. For now it simply calls 'terminateProcess' and then
+-- 'waitForProcess'.
 stopProcess :: Process stdin stdout stderr -> IO ExitCode
 stopProcess p = do
     terminateProcess p
     waitForProcess p
 
+-- | Wait (block) for a sub-process to exit and obtain its exit code.
 waitForProcess
   :: Process stdin stdout stderr
   -> IO ExitCode
@@ -117,6 +139,7 @@ waitForProcess ph = lockWaitpid $ do
     lockWaitpid m = withMVar (waitpidLock ph) $ \ () -> m
     delegatingCtlc = mbDelegateCtlc ph
 
+-- | Terminate a sub-process by sending SIGTERM to it.
 terminateProcess :: Process stdin stdout stderr -> IO ()
 terminateProcess p = withProcessHandle p $ \ case
     ClosedHandle  _ -> return ()
@@ -127,3 +150,12 @@ terminateProcess p = withProcessHandle p $ \ case
         return ()
         -- does not close the handle, we might want to try terminating it
         -- again, or get its exit code.
+
+
+-- $example
+--
+-- | blah blah blah
+--
+-- $configuring
+--
+-- Configuration of how a new sub-process will be launched.
