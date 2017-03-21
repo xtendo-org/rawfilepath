@@ -8,8 +8,8 @@
 -- Stability   :  experimental
 -- Portability :  POSIX
 --
--- Welcome to @System.Process.RawFilePath@, a small part of the glorious
--- crusade of the Haskell community to purge 'String' for the Greater Good.
+-- Welcome to @System.Process.RawFilePath@, a small part of the Haskell
+-- community's effort to purge 'String' for the Greater Good.
 --
 -- With this module, you can create (and interact with) sub-processes without
 -- the encoding problem of 'String'. The command and its arguments, all
@@ -24,25 +24,32 @@
 --
 -- 'Handle' (accessible with 'processStdin', 'processStdout', and
 -- 'processStderr') is what you can use to interact with the sub-process. For
--- example, use 'hGetContents' from "Data.ByteString" to read from a 'Handle'
--- as a 'ByteString'.
+-- example, use 'Data.ByteString.hGetContents' from "Data.ByteString" to read
+-- from a 'Handle' as a 'ByteString'.
 --
 -- == Example
 --
--- This is the type of what you get with 'startProcess'. You can stop it with
--- 'stopProcess', or wait (block) for it to exit with 'waitForProcess'.
+-- @
+-- {-\# language OverloadedStrings \#-}
+--
+-- import System.Process.RawFilePath
+-- import qualified Data.ByteString as B
+--
+-- main :: IO ()
+-- main = do
+--     p <- 'startProcess' $ 'proc' "echo" ["hello"]
+--         \`setStdout\` 'CreatePipe'
+--     result <- B.hGetContents ('processStdout' p)
+--     _ <- 'waitForProcess' p
+--
+--     print (result == "hello\\n")
+-- @
 --
 -----------------------------------------------------------------------------
 
 
 module System.Process.RawFilePath
     (
-    -- ** Example
-    --
-    -- | blah blah blah
-    --
-    -- $example
-    --
     -- ** Configuring process
     -- $configuring
       ProcessConf
@@ -63,6 +70,7 @@ module System.Process.RawFilePath
     , startProcess
 
     -- ** Obtaining process streams
+    -- $obtaining
     , processStdin
     , processStdout
     , processStderr
@@ -77,10 +85,6 @@ module System.Process.RawFilePath
 -- base modules
 
 import RawFilePath.Import hiding (ClosedHandle)
-
--- extra modules
-
-import Data.ByteString (hGetContents) -- imported for documentation
 
 -- local modules
 
@@ -152,10 +156,13 @@ terminateProcess p = withProcessHandle p $ \ case
         -- again, or get its exit code.
 
 
--- $example
---
--- | blah blah blah
---
 -- $configuring
 --
 -- Configuration of how a new sub-process will be launched.
+--
+-- $obtaining
+--
+-- As the type signature suggests, these functions only work on processes
+-- whose stream in configured to 'CreatePipe'. This is the type-safe way of
+-- obtaining 'Handle's instead of returning 'Maybe' 'Handle's like the
+-- @process@ package does.

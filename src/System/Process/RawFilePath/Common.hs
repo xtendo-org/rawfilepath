@@ -124,8 +124,8 @@ setStderr
 setStderr p newStderr = p { cfgStderr = newStderr }
 infix 4 `setStderr`
 
--- | The process type. The three type variables denote how the standard stream
--- was initialized.
+-- | The process type. The three type variables denote how its standard
+-- streams were initialized.
 data Process stdin stdout stderr = Process
     { procStdin         :: Maybe Handle
     , procStdout        :: Maybe Handle
@@ -135,16 +135,19 @@ data Process stdin stdout stderr = Process
     , waitpidLock       :: !(MVar ())
     }
 
+-- | Take a process and return its standard input handle.
 processStdin :: Process CreatePipe stdout stderr -> Handle
 processStdin Process{..} = fromMaybe err procStdin
   where
     err = error "This can't happen: stdin is CreatePipe but missing"
 
+-- | Take a process and return its standard output handle.
 processStdout :: Process stdin CreatePipe stderr -> Handle
 processStdout Process{..} = fromMaybe err procStdout
   where
     err = error "This can't happen: stdout is CreatePipe but missing"
 
+-- | Take a process and return its standard error handle.
 processStderr :: Process stdin stdout CreatePipe -> Handle
 processStderr Process{..} = fromMaybe err procStderr
   where
