@@ -104,7 +104,7 @@ setStdin
     -> newStdin
     -> ProcessConf newStdin stdout stderr
 setStdin p newStdin = p { cfgStdin = newStdin }
-infix 4 `setStdin`
+infixl 4 `setStdin`
 
 -- | Control how the standard output of the process will be initialized.
 setStdout
@@ -113,7 +113,7 @@ setStdout
     -> newStdout
     -> ProcessConf stdin newStdout stderr
 setStdout p newStdout = p { cfgStdout = newStdout }
-infix 4 `setStdout`
+infixl 4 `setStdout`
 
 -- | Control how the standard error of the process will be initialized.
 setStderr
@@ -122,7 +122,7 @@ setStderr
     -> newStderr
     -> ProcessConf stdin stdout newStderr
 setStderr p newStderr = p { cfgStderr = newStderr }
-infix 4 `setStderr`
+infixl 4 `setStderr`
 
 -- | The process type. The three type variables denote how its standard
 -- streams were initialized.
