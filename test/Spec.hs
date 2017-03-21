@@ -1,2 +1,12 @@
+{-# language OverloadedStrings #-}
+
+import System.Process.RawFilePath
+import qualified Data.ByteString as B
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+    p <- startProcess $ proc "echo" ["hello"] `setStdout` CreatePipe
+    result <- B.hGetContents (processStdout p)
+    _ <- waitForProcess p
+
+    print (result == "hello\n")
