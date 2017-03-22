@@ -4,10 +4,12 @@ module RawFilePath.Import
     , RawFilePath
     ) where
 
+import Control.Applicative as Module
 import Control.Concurrent as Module
 import Control.Exception as Module
 import Control.Monad as Module
 import Data.Bits as Module
+import Data.Functor as Module
 import Data.Maybe as Module
 import Data.Monoid as Module
 import Data.Typeable as Module
@@ -17,7 +19,7 @@ import Foreign.C as Module
 import GHC.IO.Device as Module hiding (close, getEcho, setEcho)
 import GHC.IO.Encoding as Module
 import GHC.IO.Exception as Module
-import GHC.IO.Handle.FD as Module
+import GHC.IO.Handle.FD as Module hiding (fdToHandle)
 import GHC.IO.Handle.Internals as Module
 import GHC.IO.Handle.Types as Module
 import GHC.IO.IOMode as Module

@@ -27,7 +27,7 @@ import qualified System.Posix.IO as Posix
 
 import System.Process.RawFilePath.Common
 
-#include "processFlags.h"
+#include "processFlags.c"
 
 closePHANDLE :: PHANDLE -> IO ()
 closePHANDLE _ = return ()

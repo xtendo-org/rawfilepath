@@ -27,7 +27,6 @@ library
     System.Process.RawFilePath.Posix
   c-sources:
     cbits/runProcess.c
-    cbits/processFlags.h
     cbits/processFlags.c
   include-dirs: cbits
   build-depends:

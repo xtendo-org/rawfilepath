@@ -31,18 +31,14 @@ module System.RawFilePath
     , tryRemoveFile
     ) where
 
-import Data.Monoid
-import Control.Monad
-import Control.Exception
+import RawFilePath.Import
 
-import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 
-import System.IO
-import System.IO.Error
-import System.Exit (ExitCode(..))
+-- import Foreign.Marshal.Alloc (allocaBytes)
 
-import Foreign.Marshal.Alloc (allocaBytes)
+-- extra modules
+
 import System.Posix.ByteString
 
 processError :: RawFilePath -> IOError
