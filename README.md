@@ -6,7 +6,7 @@ A Haskell library for the mid-level system functions for the `RawFilePath` data 
 
 Traditional `String` is notorious:
 
-- Up to 40 bytes (five words) required for one character (the List constructor, the pointer to the Char constructor, the Char constructor, the actual Char value, and the pointer to the next List constructor)
+- 24 bytes (three words) required for one character (the List constructor, the actual Char value, and the pointer to the next List constructor). 24x memory consumption.
 - Heap fragmentation causing malloc/free overhead
 - A lot of pointer chasing for reading, devastating the cache hit rate
 - A lot of pointer chasing plus a lot of heap object allocation for manipulation (appending, slicing, etc.)
