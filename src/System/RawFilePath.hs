@@ -15,6 +15,7 @@
 module System.RawFilePath
     ( RawFilePath
     -- * Process
+    -- $processDeprecated
     , callProcess
     , callProcessSilent
     , readProcess
@@ -45,6 +46,12 @@ processError :: RawFilePath -> IOError
 processError cmd = mkIOError userErrorType
     ("calling process " <> show cmd) Nothing (Just $ show cmd)
 
+{-# DEPRECATED
+    callProcess,
+    callProcessSilent,
+    readProcess,
+    readProcessEither
+    "Use the module \"System.Process.RawFilePath\" instead" #-}
 -- | Creates a new process to run the specified command with the given
 -- arguments, and waits for it to finish. Throws an exception if the process
 -- returns a nonzero exit code.
@@ -257,3 +264,8 @@ setCurrentDirectory = changeWorkingDirectory
 infixr 5  </>
 (</>) :: RawFilePath -> RawFilePath -> RawFilePath
 a </> b = mconcat [a, "/", b]
+
+-- $processDeprecated
+--
+-- Functions in this section are deprecated; Please use the ones in the
+-- "System.Process.RawFilePath" instead. These will be removed in 0.2.0.
