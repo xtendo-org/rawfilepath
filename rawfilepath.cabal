@@ -22,9 +22,11 @@ library
     System.Process.RawFilePath
   other-modules:
     RawFilePath.Import
+    System.Process.RawFilePath.Basic
     System.Process.RawFilePath.Common
     System.Process.RawFilePath.Internal
     System.Process.RawFilePath.Posix
+    System.Process.RawFilePath.Utility
   c-sources:
     cbits/runProcess.c
     cbits/processFlags.c
