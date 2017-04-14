@@ -9,6 +9,7 @@ import Control.Concurrent as Module
 import Control.Exception as Module
 import Control.Monad as Module
 import Data.Bits as Module
+import Data.Char as Module
 import Data.Functor as Module
 import Data.Maybe as Module
 import Data.Monoid as Module

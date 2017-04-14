@@ -18,8 +18,9 @@ library
   hs-source-dirs:      src
   exposed-modules:
     Data.ByteString.RawFilePath,
-    System.RawFilePath
+    RawFilePath.Directory
     System.Process.RawFilePath
+    System.RawFilePath
   other-modules:
     RawFilePath.Import
     System.Process.RawFilePath.Basic

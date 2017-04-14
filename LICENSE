@@ -1,7 +1,7 @@
 Summary: This library is licensed under Apache-2.0, BSD2, and MIT.
 
 Some code in this library is derived from the process library, whose license
-is in the "The process Library" section.
+is in the "Library" section.
 
 -----------------------------------------------------------------------------
 
@@ -268,10 +268,10 @@ DEALINGS IN THE SOFTWARE.
 
 -----------------------------------------------------------------------------
 
-== The process Library ==
+== Library ==
 
-This library (libraries/process) is derived from code from two
-sources: 
+The libraries (process and directory) are derived from code from two
+sources:
 
   * Code from the GHC project which is largely (c) The University of
     Glasgow, and distributable under a BSD-style license (see below),
