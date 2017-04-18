@@ -1,5 +1,9 @@
 module RawFilePath.Directory
-    ( listDirectory
+    ( doesPathExist
+    , doesFileExist
+    , doesDirectoryExist
+    , getTemporaryDirectory
+    , listDirectory
     , getDirectoryFiles
     , createDirectory
     , createDirectoryIfMissing
@@ -19,6 +23,31 @@ import qualified System.Posix.ByteString as U -- U for Unix
 -- local modules
 
 import RawFilePath.Directory.Internal
+
+-- | Test whether the given path points to an existing filesystem object.  If
+-- the user lacks necessary permissions to search the parent directories, this
+-- function may return false even if the file does actually exist.
+doesPathExist :: RawFilePath -> IO Bool
+doesPathExist path = (True <$ U.getFileStatus path) `catchIOError`
+      const (return False)
+
+-- | Return 'True' if the argument file exists and is either a directory or a
+-- symbolic link to a directory, and 'False' otherwise.
+doesDirectoryExist :: RawFilePath -> IO Bool
+doesDirectoryExist path = pathIsDirectory path `catchIOError`
+    const (return False)
+
+-- The operation 'doesFileExist' returns 'True' if the argument file exists
+-- and is not a directory, and 'False' otherwise.
+doesFileExist :: RawFilePath -> IO Bool
+doesFileExist path = (not <$> pathIsDirectory path) `catchIOError`
+    const (return False)
+
+-- | Return the current directory for temporary files.  It first returns the
+-- value of the @TMPDIR@ environment variable or \"\/tmp\" if the variable
+-- isn\'t defined.
+getTemporaryDirectory :: IO ByteString
+getTemporaryDirectory = fromMaybe "/tmp" <$> U.getEnv "TMPDIR"
 
 -- | Get a list of files in the specified directory, excluding "." and ".."
 --
@@ -136,9 +165,8 @@ removePathRecursive path =
       DirectoryLink -> U.removeDirectory path
       _             -> U.removeLink path
 
--- | @'removeContentsRecursive' dir@ removes the contents of the directory
--- /dir/ recursively. Symbolic links are removed without affecting their the
--- targets.
+-- | Remove the contents of the directory /dir/ recursively. Symbolic links
+-- are removed without affecting their the targets.
 removeContentsRecursive :: RawFilePath -> IO ()
 removeContentsRecursive path =
   (`ioeAddLocation` "removeContentsRecursive") `modifyIOError` do
