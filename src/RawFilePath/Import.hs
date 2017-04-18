@@ -17,7 +17,7 @@ import Data.Typeable as Module
 import Data.Word as Module
 import Foreign as Module hiding (void)
 import Foreign.C as Module
-import GHC.IO.Device as Module hiding (close, getEcho, setEcho)
+import GHC.IO.Device as Module hiding (close, getEcho, setEcho, Directory)
 import GHC.IO.Encoding as Module
 import GHC.IO.Exception as Module
 import GHC.IO.Handle.FD as Module hiding (fdToHandle)

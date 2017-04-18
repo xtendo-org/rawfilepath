@@ -3,6 +3,9 @@ module RawFilePath.Directory
     , getDirectoryFiles
     , createDirectory
     , createDirectoryIfMissing
+    , removeFile
+    , removeDirectory
+    , removeDirectoryRecursive
     ) where
 
 import RawFilePath.Import
@@ -10,7 +13,12 @@ import RawFilePath.Import
 -- extra modules
 
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as B8
 import qualified System.Posix.ByteString as U -- U for Unix
+
+-- local modules
+
+import RawFilePath.Directory.Internal
 
 -- | Get a list of files in the specified directory, excluding "." and ".."
 --
@@ -54,10 +62,11 @@ createDirectory dir = U.createDirectory dir 0o755
 -- | Create a new directory if it does not already exist.  If the first
 -- argument is 'True' the function will also create all parent directories
 -- when they are missing.
-createDirectoryIfMissing :: Bool -> RawFilePath -> IO ()
 createDirectoryIfMissing
-    willCreateParents -- ^ Create parent directories or not
-    path -- ^ The path of the directory to create
+    :: Bool -- ^ Create parent directories or not
+    -> RawFilePath -- ^ The path of the directory to create
+    -> IO ()
+createDirectoryIfMissing willCreateParents path
     | willCreateParents = createDirs parents
     | otherwise = createDir path ioError
   where
@@ -89,6 +98,54 @@ createDirectoryIfMissing
               unless canIgnore (ioError e)
           | otherwise              -> ioError e
     parents = reverse $ scanl1 (+/+) $ B.split (w8 '/') $ stripSlash path
+
+-- | Remove a file. This function internally calls @unlink@.
+removeFile :: RawFilePath -> IO ()
+removeFile = U.removeLink
+
+-- | Remove a directory. The target directory needs to be empty; Otherwise an
+-- exception will be thrown.
+removeDirectory :: RawFilePath -> IO ()
+removeDirectory = U.removeDirectory
+
+-- | @'removeDirectoryRecursive' dir@ removes an existing directory /dir/
+-- together with its contents and subdirectories. Within this directory,
+-- symbolic links are removed without affecting their targets.
+removeDirectoryRecursive :: RawFilePath -> IO ()
+removeDirectoryRecursive path =
+  (`ioeAddLocation` "removeDirectoryRecursive") `modifyIOError` do
+    m <- U.getSymbolicLinkStatus path
+    case fileTypeFromMetadata m of
+      Directory ->
+        removeContentsRecursive path
+      DirectoryLink ->
+        ioError (err `ioeSetErrorString` "is a directory symbolic link")
+      _ ->
+        ioError (err `ioeSetErrorString` "not a directory")
+  where err = mkIOError InappropriateType "" Nothing (Just (B8.unpack path))
+
+-- | @'removePathRecursive' path@ removes an existing file or directory at
+-- /path/ together with its contents and subdirectories. Symbolic links are
+-- removed without affecting their the targets.
+removePathRecursive :: RawFilePath -> IO ()
+removePathRecursive path =
+  (`ioeAddLocation` "removePathRecursive") `modifyIOError` do
+    m <- U.getSymbolicLinkStatus path
+    case fileTypeFromMetadata m of
+      Directory     -> removeContentsRecursive path
+      DirectoryLink -> U.removeDirectory path
+      _             -> U.removeLink path
+
+-- | @'removeContentsRecursive' dir@ removes the contents of the directory
+-- /dir/ recursively. Symbolic links are removed without affecting their the
+-- targets.
+removeContentsRecursive :: RawFilePath -> IO ()
+removeContentsRecursive path =
+  (`ioeAddLocation` "removeContentsRecursive") `modifyIOError` do
+    cont <- listDirectory path
+    mapM_ removePathRecursive [path +/+ x | x <- cont]
+    U.removeDirectory path
+
 
 w8 :: Char -> Word8
 w8 = fromIntegral . ord

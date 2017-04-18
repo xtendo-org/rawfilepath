@@ -23,6 +23,7 @@ library
     System.RawFilePath
   other-modules:
     RawFilePath.Import
+    RawFilePath.Directory.Internal
     System.Process.RawFilePath.Basic
     System.Process.RawFilePath.Common
     System.Process.RawFilePath.Internal
