@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  System.Process.RawFilePath
+-- Module      :  RawFilePath.Process
 -- Copyright   :  (C) XT et al. 2017
 -- License     :  BSD-style (see the file LICENSE)
 --
@@ -8,7 +8,7 @@
 -- Stability   :  experimental
 -- Portability :  POSIX
 --
--- Welcome to @System.Process.RawFilePath@, a small part of the Haskell
+-- Welcome to @RawFilePath.Process@, a small part of the Haskell
 -- community's effort to purge 'String' for the Greater Good.
 --
 -- With this module, you can create (and interact with) sub-processes without
@@ -32,7 +32,7 @@
 -- @
 -- {-\# language OverloadedStrings \#-}
 --
--- import System.Process.RawFilePath
+-- import RawFilePath.Process
 -- import qualified Data.ByteString as B
 --
 -- main :: IO ()
@@ -48,7 +48,7 @@
 -----------------------------------------------------------------------------
 
 
-module System.Process.RawFilePath
+module RawFilePath.Process
     (
     -- ** Configuring process
     -- $configuring
@@ -82,15 +82,15 @@ module System.Process.RawFilePath
 
     -- ** Utility functions
     -- $utility
-    , module System.Process.RawFilePath.Utility
+    , module RawFilePath.Process.Utility
 
     ) where
 
 -- local modules
 
-import System.Process.RawFilePath.Basic
-import System.Process.RawFilePath.Common
-import System.Process.RawFilePath.Utility
+import RawFilePath.Process.Basic
+import RawFilePath.Process.Common
+import RawFilePath.Process.Utility
 
 -- $configuring
 --

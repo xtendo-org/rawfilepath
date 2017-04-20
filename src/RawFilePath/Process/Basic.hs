@@ -1,4 +1,4 @@
-module System.Process.RawFilePath.Basic where
+module RawFilePath.Process.Basic where
 
 -- base modules
 
@@ -6,9 +6,9 @@ import RawFilePath.Import hiding (ClosedHandle)
 
 -- local modules
 
-import System.Process.RawFilePath.Common
-import System.Process.RawFilePath.Internal
-import System.Process.RawFilePath.Posix
+import RawFilePath.Process.Common
+import RawFilePath.Process.Internal
+import RawFilePath.Process.Posix
 
 -- | Start a new sub-process with the given configuration.
 startProcess

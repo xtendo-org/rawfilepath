@@ -1,4 +1,4 @@
-module System.Process.RawFilePath.Common
+module RawFilePath.Process.Common
     ( Process(..)
     , ProcessConf(..)
     , proc

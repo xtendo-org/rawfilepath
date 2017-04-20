@@ -1,4 +1,4 @@
-module System.Process.RawFilePath.Posix
+module RawFilePath.Process.Posix
     ( createProcessInternal
     , withCEnvironment
     , closePHANDLE
@@ -25,7 +25,7 @@ import qualified System.Posix.IO as Posix
 
 -- local modules
 
-import System.Process.RawFilePath.Common
+import RawFilePath.Process.Common
 
 #include "processFlags.c"
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE InterruptibleFFI #-}
 
-module System.Process.RawFilePath.Internal
+module RawFilePath.Process.Internal
     ( c_terminateProcess
     , c_getProcessExitCode
     , c_waitForProcess
@@ -11,7 +11,7 @@ import Foreign.C
 
 import System.Posix.Types (CPid (..))
 
-import System.Process.RawFilePath.Common
+import RawFilePath.Process.Common
 
 foreign import ccall unsafe "terminateProcess"
   c_terminateProcess

@@ -18,17 +18,17 @@ library
   hs-source-dirs:      src
   exposed-modules:
     Data.ByteString.RawFilePath,
+    RawFilePath
     RawFilePath.Directory
-    System.Process.RawFilePath
-    System.RawFilePath
+    RawFilePath.Process
   other-modules:
-    RawFilePath.Import
     RawFilePath.Directory.Internal
-    System.Process.RawFilePath.Basic
-    System.Process.RawFilePath.Common
-    System.Process.RawFilePath.Internal
-    System.Process.RawFilePath.Posix
-    System.Process.RawFilePath.Utility
+    RawFilePath.Import
+    RawFilePath.Process.Basic
+    RawFilePath.Process.Common
+    RawFilePath.Process.Internal
+    RawFilePath.Process.Posix
+    RawFilePath.Process.Utility
   c-sources:
     cbits/runProcess.c
     cbits/processFlags.c

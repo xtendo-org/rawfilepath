@@ -1,4 +1,4 @@
-module System.Process.RawFilePath.Utility
+module RawFilePath.Process.Utility
     ( callProcess
     , readProcessWithExitCode
     ) where
@@ -15,8 +15,8 @@ import qualified Data.ByteString.Builder as B
 
 -- local modules
 
-import System.Process.RawFilePath.Common
-import System.Process.RawFilePath.Basic
+import RawFilePath.Process.Common
+import RawFilePath.Process.Basic
 
 -- | Create a new process with the given configuration, and wait for it to
 -- finish.
