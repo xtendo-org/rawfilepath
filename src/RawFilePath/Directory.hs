@@ -1,10 +1,29 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  RawFilePath.Directory
+-- Copyright   :  (C) 2004 The University of Glasgow. (C) 2017 XT et al.
+-- License     :  BSD-style (see the LICENSE file)
+--
+-- Maintainer  :  e@xtendo.org
+-- Stability   :  experimental
+-- Portability :  POSIX
+--
+-- This is the module for the 'RawFilePath' version of functions in the
+-- @directory@ package.
+--
+-----------------------------------------------------------------------------
+
 module RawFilePath.Directory
-    ( doesPathExist
+    (
+    -- ** Nondestructive (read-only)
+      doesPathExist
     , doesFileExist
     , doesDirectoryExist
+    , getHomeDirectory
     , getTemporaryDirectory
     , listDirectory
     , getDirectoryFiles
+    -- ** Destructive
     , createDirectory
     , createDirectoryIfMissing
     , removeFile
@@ -37,11 +56,30 @@ doesDirectoryExist :: RawFilePath -> IO Bool
 doesDirectoryExist path = pathIsDirectory path `catchIOError`
     const (return False)
 
--- The operation 'doesFileExist' returns 'True' if the argument file exists
--- and is not a directory, and 'False' otherwise.
+-- | Return 'True' if the argument file exists and is not a directory, and
+-- 'False' otherwise.
 doesFileExist :: RawFilePath -> IO Bool
 doesFileExist path = (not <$> pathIsDirectory path) `catchIOError`
     const (return False)
+
+-- | Returns the current user's home directory. More specifically, the value
+-- of the @HOME@ environment variable.
+--
+-- The directory returned is expected to be writable by the current user, but
+-- note that it isn't generally considered good practice to store
+-- application-specific data here; use 'getXdgDirectory' or
+-- 'getAppUserDataDirectory' instead.
+--
+-- The operation may fail with:
+--
+-- * 'UnsupportedOperation'
+-- The operating system has no notion of home directory.
+--
+-- * 'isDoesNotExistError'
+-- The home directory for the current user does not exist, or
+-- cannot be found.
+getHomeDirectory :: IO (Maybe RawFilePath)
+getHomeDirectory = U.getEnv "HOME"
 
 -- | Return the current directory for temporary files.  It first returns the
 -- value of the @TMPDIR@ environment variable or \"\/tmp\" if the variable
@@ -137,9 +175,9 @@ removeFile = U.removeLink
 removeDirectory :: RawFilePath -> IO ()
 removeDirectory = U.removeDirectory
 
--- | @'removeDirectoryRecursive' dir@ removes an existing directory /dir/
--- together with its contents and subdirectories. Within this directory,
--- symbolic links are removed without affecting their targets.
+-- | Remove an existing directory /dir/ together with its contents and
+-- subdirectories. Within this directory, symbolic links are removed without
+-- affecting their targets.
 removeDirectoryRecursive :: RawFilePath -> IO ()
 removeDirectoryRecursive path =
   (`ioeAddLocation` "removeDirectoryRecursive") `modifyIOError` do
@@ -153,9 +191,9 @@ removeDirectoryRecursive path =
         ioError (err `ioeSetErrorString` "not a directory")
   where err = mkIOError InappropriateType "" Nothing (Just (B8.unpack path))
 
--- | @'removePathRecursive' path@ removes an existing file or directory at
--- /path/ together with its contents and subdirectories. Symbolic links are
--- removed without affecting their the targets.
+-- | Remove an existing file or directory at /path/ together with its contents
+-- and subdirectories. Symbolic links are removed without affecting their the
+-- targets.
 removePathRecursive :: RawFilePath -> IO ()
 removePathRecursive path =
   (`ioeAddLocation` "removePathRecursive") `modifyIOError` do
