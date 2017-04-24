@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.2.0 - 2017-04-20
+
+### Added
+
+- Higher-level directory functions
+- Utility functions for process (callProcess, readProcessWithExitCode)
+
+### Changed
+
+- Module hierarchy now follows [Taylor Fausak's 2016 advice](http://taylor.fausak.me/2016/12/05/haskell-package-checklist/). `RawFilePath` will be the top-level module which re-exports everything.
+
 ## 0.1.1 - 2017-03-21
 
 ### Added
