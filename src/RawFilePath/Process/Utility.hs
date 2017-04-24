@@ -29,11 +29,9 @@ callProcess conf = start >>= waitForProcess
         , cfgStderr = NoStream
         }
 
--- | Fork an external process, read its standard output strictly, blocking
--- until the process terminates, and return the output as 'ByteString'.
---
--- Output is returned strictly, so this is not suitable for interactive
--- applications.
+-- | Fork an external process, read its standard output and standard error
+-- strictly, blocking until the process terminates, and return them with the
+-- process exit code.
 readProcessWithExitCode
     :: ProcessConf stdin stdout stderr
     -> IO (ExitCode, ByteString, ByteString)

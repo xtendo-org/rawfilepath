@@ -14,9 +14,9 @@
 -----------------------------------------------------------------------------
 
 module RawFilePath.Directory
-    (
+    ( RawFilePath
     -- ** Nondestructive (read-only)
-      doesPathExist
+    , doesPathExist
     , doesFileExist
     , doesDirectoryExist
     , getHomeDirectory

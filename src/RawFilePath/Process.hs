@@ -49,10 +49,10 @@
 
 
 module RawFilePath.Process
-    (
+    ( RawFilePath
     -- ** Configuring process
     -- $configuring
-      ProcessConf
+    , ProcessConf
     , proc
 
     -- *** Configuring process standard streams
@@ -82,9 +82,12 @@ module RawFilePath.Process
 
     -- ** Utility functions
     -- $utility
-    , module RawFilePath.Process.Utility
+    , callProcess
+    , readProcessWithExitCode
 
     ) where
+
+import RawFilePath.Import
 
 -- local modules
 
