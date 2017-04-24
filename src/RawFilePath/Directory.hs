@@ -23,10 +23,12 @@ module RawFilePath.Directory
     , getTemporaryDirectory
     , listDirectory
     , getDirectoryFiles
+    , getDirectoryFilesRecursive
     -- ** Destructive
     , createDirectory
     , createDirectoryIfMissing
     , removeFile
+    , tryRemoveFile
     , removeDirectory
     , removeDirectoryRecursive
     ) where
@@ -115,6 +117,24 @@ getDirectoryFiles dirPath = bracket open close repeatRead
             rest <- repeatRead stream
             return $ d : rest
 
+-- | Recursively get all files in all subdirectories of the specified
+-- directory.
+--
+-- > *System.RawFilePath> getDirectoryFilesRecursive "src"
+-- > ["src/System/RawFilePath.hs"]
+getDirectoryFilesRecursive
+    :: RawFilePath -- ^ The path of directory to inspect
+    -> IO [RawFilePath] -- ^ A list of relative paths
+getDirectoryFilesRecursive path = do
+    names <- map (path +/+) . filter (\x -> x /= ".." && x /= ".") <$>
+        getDirectoryFiles path
+    inspectedNames <- mapM inspect names
+    return $ concat inspectedNames
+  where
+    inspect :: RawFilePath -> IO [RawFilePath]
+    inspect p = fmap U.isDirectory (U.getFileStatus p) >>= \i -> if i
+        then getDirectoryFilesRecursive p else return [p]
+
 -- | Create a new directory.
 --
 -- > ghci> createDirectory "/tmp/mydir"
@@ -166,9 +186,16 @@ createDirectoryIfMissing willCreateParents path
           | otherwise              -> ioError e
     parents = reverse $ scanl1 (+/+) $ B.split (w8 '/') $ stripSlash path
 
--- | Remove a file. This function internally calls @unlink@.
+-- | Remove a file. This function internally calls @unlink@. If the file does
+-- not exist, an exception is thrown.
 removeFile :: RawFilePath -> IO ()
 removeFile = U.removeLink
+
+-- | A function that "tries" to remove a file. If the file does not exist,
+-- nothing happens.
+tryRemoveFile :: RawFilePath -> IO ()
+tryRemoveFile path = catchIOError (U.removeLink path) $
+    \ e -> unless (isDoesNotExistError e) $ ioError e
 
 -- | Remove a directory. The target directory needs to be empty; Otherwise an
 -- exception will be thrown.
