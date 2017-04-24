@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.1 - 2017-04-23
+
+### Added
+
+- Convenience functions that were mistakenly removed: `getDirectoryFilesRecursive` and `tryRemoveFile`.
+
 ## 0.2.0 - 2017-04-20
 
 ### Added
