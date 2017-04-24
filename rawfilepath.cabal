@@ -32,6 +32,7 @@ library
   c-sources:
     cbits/runProcess.c
     cbits/processFlags.c
+    cbits/processFlags.h
   include-dirs: cbits
   build-depends:
     bytestring,
