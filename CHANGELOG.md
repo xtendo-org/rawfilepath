@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.2 - 2017-04-23
+
+### Fixed
+
+- The missing "processFlags.h" in the "c-sources" section of the cabal file. This made the builds fail.
+
 ## 0.2.1 - 2017-04-23
 
 ### Added
