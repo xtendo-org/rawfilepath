@@ -1,9 +1,10 @@
 module RawFilePath
-    ( module Module
+    ( module RawFilePath.Directory
+    , module RawFilePath.Process
     , RawFilePath
     ) where
 
 import System.Posix.ByteString (RawFilePath)
 
-import RawFilePath.Directory as Module
-import RawFilePath.Process as Module
+import RawFilePath.Directory
+import RawFilePath.Process
