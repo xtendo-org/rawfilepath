@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.2.3 - 2017-05-07
+
+### Added
+
+- A little bit more documentation
+
+### Changed
+
+- `stack.yaml` is no longer included. It has been added to `.gitignore`.
+
 ## 0.2.2 - 2017-04-23
 
 ### Fixed
