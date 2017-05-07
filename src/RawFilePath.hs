@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  RawFilePath.Process
+-- Module      :  RawFilePath
 -- Copyright   :  (C) XT et al. 2017
 -- License     :  BSD-style (see the file LICENSE)
 --
