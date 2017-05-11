@@ -1,6 +1,6 @@
 {-# language OverloadedStrings #-}
 
-import System.Process.RawFilePath
+import RawFilePath
 import qualified Data.ByteString as B
 
 main :: IO ()
