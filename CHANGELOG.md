@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.4 - 2017-05-11
+
+### Fixed
+
+- Fixed test
+
 ## 0.2.3 - 2017-05-07
 
 ### Added
