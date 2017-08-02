@@ -65,6 +65,9 @@ module RawFilePath.Process
     , setStdin
     , setStdout
     , setStderr
+    , changeStdin
+    , changeStdout
+    , changeStderr
 
     -- ** Running process
     , Process

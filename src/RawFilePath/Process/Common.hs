@@ -16,6 +16,9 @@ module RawFilePath.Process.Common
     , setStdin
     , setStdout
     , setStderr
+    , changeStdin
+    , changeStdout
+    , changeStderr
 
     , PHANDLE
     , ProcessHandle__(..)
@@ -115,31 +118,58 @@ proc' cmd args = ProcessConf
     , childUser = Nothing
     }
 
--- | Control how the standard input of the process will be initialized.
-setStdin
+-- | Modify how the standard input of the process will be initialized.
+changeStdin
     :: (StreamType newStdin)
     => ProcessConf oldStdin stdout stderr
     -> newStdin
     -> ProcessConf newStdin stdout stderr
-setStdin p newStdin = p { cfgStdin = newStdin }
-infixl 4 `setStdin`
+changeStdin p newStdin = p { cfgStdin = newStdin }
+infixl 4 `changeStdin`
 
--- | Control how the standard output of the process will be initialized.
-setStdout
+-- | Modify how the standard output of the process will be initialized.
+changeStdout
     :: (StreamType newStdout)
     => ProcessConf stdin oldStdout stderr
     -> newStdout
     -> ProcessConf stdin newStdout stderr
-setStdout p newStdout = p { cfgStdout = newStdout }
-infixl 4 `setStdout`
+changeStdout p newStdout = p { cfgStdout = newStdout }
+infixl 4 `changeStdout`
 
--- | Control how the standard error of the process will be initialized.
-setStderr
+-- | Modify how the standard error of the process will be initialized.
+changeStderr
     :: (StreamType newStderr)
     => ProcessConf stdin stdout oldStderr
     -> newStderr
     -> ProcessConf stdin stdout newStderr
-setStderr p newStderr = p { cfgStderr = newStderr }
+changeStderr p newStderr = p { cfgStderr = newStderr }
+infixl 4 `changeStderr`
+
+-- | Control how the standard input of the process will be initialized.
+setStdin
+    :: (StreamType stdin)
+    => ProcessConf Inherit stdout stderr
+    -> stdin
+    -> ProcessConf stdin stdout stderr
+setStdin = changeStdin
+infixl 4 `setStdin`
+
+-- | Control how the standard output of the process will be initialized.
+setStdout
+    :: (StreamType stdout)
+    => ProcessConf stdin Inherit stderr
+    -> stdout
+    -> ProcessConf stdin stdout stderr
+setStdout = changeStdout
+infixl 4 `setStdout`
+
+-- | Control how the standard error of the process will be initialized.
+setStderr
+    :: (StreamType stderr)
+    => ProcessConf stdin stdout Inherit
+    -> stderr
+    -> ProcessConf stdin stdout stderr
+setStderr = changeStderr
 infixl 4 `setStderr`
 
 -- | The process type. The three type variables denote how its standard
