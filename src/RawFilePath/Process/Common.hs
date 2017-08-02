@@ -2,6 +2,7 @@ module RawFilePath.Process.Common
     ( Process(..)
     , ProcessConf(..)
     , proc
+    , proc'
     , processStdin
     , processStdout
     , processStderr
@@ -32,6 +33,7 @@ import RawFilePath.Import
 
 import System.Posix.Internals (FD)
 import qualified GHC.IO.FD as FD
+import Data.Default.Class (def, Default)
 
 -- Original declarations
 
@@ -81,13 +83,29 @@ proc
     :: RawFilePath -- ^ Command to run
     -> [ByteString] -- ^ Arguments to the command
     -> ProcessConf Inherit Inherit Inherit
-proc cmd args = ProcessConf
+proc = proc'
+
+-- | Create a process configuration with the default settings.
+-- This may be useful when you need to change all at once.
+-- For instance:
+--
+-- @
+-- proc' "echo" ["hello"] :: 'ProcessConf' 'Inherit' 'CreatePipe' 'NoStream'
+-- @
+proc'
+    :: ( StreamType stdin, StreamType stdout, StreamType stderr
+       , Default stdin, Default stdout, Default stderr
+       )
+    => RawFilePath -- ^ Command to run
+    -> [ByteString] -- ^ Arguments to the command
+    -> ProcessConf stdin stdout stderr
+proc' cmd args = ProcessConf
     { cmdargs = cmd : args
     , cwd = Nothing
     , env = Nothing
-    , cfgStdin = Inherit
-    , cfgStdout = Inherit
-    , cfgStderr = Inherit
+    , cfgStdin = def
+    , cfgStdout = def
+    , cfgStderr = def
     , closeFds = False
     , createGroup = False
     , delegateCtlc = False
@@ -197,6 +215,10 @@ instance StreamType UseHandle where
                 "createProcess" (Just hdl) Nothing
                 `ioeSetErrorString` "handle is not a file descriptor"
     willCreateHandle _ = False
+
+instance Default CreatePipe where def = CreatePipe
+instance Default Inherit    where def = Inherit
+instance Default NoStream   where def = NoStream
 
 -- Declarations from the process package (modified)
 

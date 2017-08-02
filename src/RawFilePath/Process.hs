@@ -54,6 +54,7 @@ module RawFilePath.Process
     -- $configuring
     , ProcessConf
     , proc
+    , proc'
 
     -- *** Configuring process standard streams
     , StreamType
