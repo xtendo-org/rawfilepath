@@ -36,7 +36,6 @@ import RawFilePath.Import
 
 import System.Posix.Internals (FD)
 import qualified GHC.IO.FD as FD
-import Data.Default.Class (def, Default)
 
 -- Original declarations
 
@@ -245,6 +244,11 @@ instance StreamType UseHandle where
                 "createProcess" (Just hdl) Nothing
                 `ioeSetErrorString` "handle is not a file descriptor"
     willCreateHandle _ = False
+
+-- | A class of types with default value.
+-- Simply this class is from data-default-class.
+class Default a where
+    def :: a
 
 instance Default CreatePipe where def = CreatePipe
 instance Default Inherit    where def = Inherit
