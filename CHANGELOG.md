@@ -1,5 +1,19 @@
 # Change Log
 
+## 1.0.0 - 2021-10-16
+
+### Fixed
+
+- Fixed the namespace conflict issue in the new GHC.IO.Handle.FD interface. Now the library works fine with ghc-9.0.1.
+
+### Changed
+
+- After four years of use, it is clear that the API is stable. We are now 1.0.0.
+
+### Fixed
+
+- Fixed test
+
 ## 0.2.4 - 2017-05-11
 
 ### Fixed

@@ -5,7 +5,7 @@
 -- License     :  BSD-style (see the LICENSE file)
 --
 -- Maintainer  :  e@xtendo.org
--- Stability   :  experimental
+-- Stability   :  stable
 -- Portability :  POSIX
 --
 -- This is the module for the 'RawFilePath' version of functions in the

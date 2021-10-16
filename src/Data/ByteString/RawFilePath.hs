@@ -4,7 +4,7 @@
 -- License     : Apache 2.0
 --
 -- Maintainer  : e@xtendo.org
--- Stability   : experimental
+-- Stability   : stable
 -- Portability : POSIX
 --
 -- A drop-in replacement of @Data.ByteString@ from the @bytestring@ package
