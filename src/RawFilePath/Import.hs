@@ -24,6 +24,8 @@ import GHC.IO.Handle.FD as Module hiding
   ( fdToHandle
   , openBinaryFile
   , openFile
+  , withBinaryFile
+  , withFile
   , stderr
   , stdin
   , stdout
