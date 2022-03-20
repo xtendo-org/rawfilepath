@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.0.1 - 2022-03-20
+
+### Fixed
+
+- Fixed the module import statements to compile with GHC 9.2.2.
+
 ## 1.0.0 - 2021-10-16
 
 ### Fixed

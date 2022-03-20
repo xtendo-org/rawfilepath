@@ -1,5 +1,5 @@
 name:                rawfilepath
-version:             1.0.0
+version:             1.0.1
 synopsis:            Use RawFilePath instead of FilePath
 description:         Please see README.md
 homepage:            https://github.com/xtendo-org/rawfilepath#readme
