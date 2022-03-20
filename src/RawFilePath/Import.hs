@@ -20,14 +20,6 @@ import Foreign.C as Module
 import GHC.IO.Device as Module hiding (close, getEcho, setEcho, Directory)
 import GHC.IO.Encoding as Module
 import GHC.IO.Exception as Module
-import GHC.IO.Handle.FD as Module hiding
-  ( fdToHandle
-  , openBinaryFile
-  , openFile
-  , stderr
-  , stdin
-  , stdout
-  )
 import GHC.IO.Handle.Internals as Module
 import GHC.IO.Handle.Types as Module
 import GHC.IO.IOMode as Module

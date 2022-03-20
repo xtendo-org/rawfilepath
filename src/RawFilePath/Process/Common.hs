@@ -30,6 +30,7 @@ import RawFilePath.Import
 
 -- extra modules
 
+import GHC.IO.Handle.FD as Module (mkHandleFromFD)
 import System.Posix.Internals (FD)
 import qualified GHC.IO.FD as FD
 
