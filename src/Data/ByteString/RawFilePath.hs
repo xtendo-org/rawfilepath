@@ -49,15 +49,20 @@ withFile :: RawFilePath -> IOMode -> (Handle -> IO r) -> IO r
 withFile path ioMode = bracket (open >>= fdToHandle) hClose
   where
     open = case ioMode of
-        ReadMode -> openFd path ReadOnly Nothing defaultFlags
+        ReadMode -> openFd path ReadOnly $ defaultFlags Nothing
         WriteMode -> createFile path stdFileMode
-        AppendMode -> openFd path WriteOnly (Just stdFileMode) appendFlags
-        ReadWriteMode -> openFd path ReadWrite (Just stdFileMode) defaultFlags
-    defaultFlags = OpenFileFlags
+        AppendMode -> openFd path WriteOnly $ appendFlags $ Just stdFileMode
+        ReadWriteMode -> openFd path ReadWrite $ defaultFlags $ Just stdFileMode
+    defaultFlags creat = OpenFileFlags
         { System.Posix.ByteString.append = False
+        , creat = creat
         , exclusive = False
         , noctty = True
         , nonBlock = False
         , trunc = False
+        , nofollow = False
+        , cloexec = False
+        , directory = False
+        , sync = False
         }
-    appendFlags = defaultFlags { System.Posix.ByteString.append = True }
+    appendFlags creat = (defaultFlags creat) { System.Posix.ByteString.append = True }
