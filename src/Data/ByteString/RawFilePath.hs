@@ -48,6 +48,7 @@ appendFile path content = withFile path AppendMode (`hPut` content)
 withFile :: RawFilePath -> IOMode -> (Handle -> IO r) -> IO r
 withFile path ioMode = bracket (open >>= fdToHandle) hClose
   where
+#if MIN_VERSION_unix(2,8,0)
     open = case ioMode of
         ReadMode -> openFd path ReadOnly $ defaultFlags Nothing
         WriteMode -> createFile path stdFileMode
@@ -66,3 +67,18 @@ withFile path ioMode = bracket (open >>= fdToHandle) hClose
         , sync = False
         }
     appendFlags creat = (defaultFlags creat) { System.Posix.ByteString.append = True }
+#else
+    open = case ioMode of
+        ReadMode -> openFd path ReadOnly Nothing defaultFlags
+        WriteMode -> createFile path stdFileMode
+        AppendMode -> openFd path WriteOnly (Just stdFileMode) appendFlags
+        ReadWriteMode -> openFd path ReadWrite (Just stdFileMode) defaultFlags
+    defaultFlags = OpenFileFlags
+        { System.Posix.ByteString.append = False
+        , exclusive = False
+        , noctty = True
+        , nonBlock = False
+        , trunc = False
+        }
+    appendFlags = defaultFlags { System.Posix.ByteString.append = True }
+#endif

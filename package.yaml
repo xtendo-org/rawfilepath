@@ -1,0 +1,47 @@
+name: rawfilepath
+version: 1.0.1
+synopsis: Use RawFilePath instead of FilePath
+description: Please see README.md
+category: System
+author: XT
+maintainer: e@xtendo.org
+copyright: 2016 XT
+license: Apache-2.0
+github: xtendo-org/rawfilepath
+extra-source-files:
+- README.md
+dependencies:
+- bytestring
+library:
+  source-dirs: src
+  c-sources:
+  - cbits/runProcess.c
+  - cbits/processFlags.c
+  - cbits/processFlags.h
+  default-extensions:
+  - BangPatterns
+  - CPP
+  - LambdaCase
+  - OverloadedStrings
+  - RecordWildCards
+  include-dirs:
+  - cbits
+  exposed-modules:
+  - Data.ByteString.RawFilePath
+  - RawFilePath
+  - RawFilePath.Directory
+  - RawFilePath.Process
+  dependencies:
+  - base
+  - unix
+tests:
+  RawFilePath-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - base
+    - rawfilepath
