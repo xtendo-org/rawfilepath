@@ -1,6 +1,14 @@
 # rawfilepath
 
-Version: 1.0.1
+Version: 1.1.0
+
+## TL;DR
+
+- Use all "process" and "directory" features
+- like `callProcess` or `getDirectoryFiles`
+- without worrying about `FilePath` encoding issues or performance penalties.
+
+## Overview
 
 The `unix` package provides `RawFilePath` which is a type synonym of `ByteString`. Unlike `FilePath` (which is `String`), it has no performance issues because it is `ByteString`. It has no encoding issues because it is `ByteString` which is a sequence of bytes instead of characters.
 

@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.1.0 - 2023-08-29
+
+### Fixed
+
+- Fixed `Data.ByteString.RawFilePath` to build with unix-2.8 (and therefore GHC 9.6)
+
 ## 1.0.1 - 2022-03-20
 
 ### Fixed
