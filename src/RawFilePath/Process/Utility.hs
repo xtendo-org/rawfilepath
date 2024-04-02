@@ -19,7 +19,9 @@ import RawFilePath.Process.Common
 import RawFilePath.Process.Basic
 
 -- | Create a new process with the given configuration, and wait for it to
--- finish.
+-- finish. Note that this will set all streams to `NoStream`, so the process
+-- will be completely silent. If you need the output data from the process, use
+-- `readProcessWithExitCode` instead.
 callProcess :: ProcessConf stdin stdout stderr -> IO ExitCode
 callProcess conf = start >>= waitForProcess
   where
