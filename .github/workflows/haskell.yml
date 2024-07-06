@@ -1,6 +1,6 @@
 name: Haskell CI
 
-on: pull_request
+on: [push, pull_request]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -66,7 +66,7 @@ jobs:
     - run: fourmolu --mode check src test
 
   hlint:
-    needs: setup
+    needs: install-hlint
     runs-on: ubuntu-latest
     steps:
     - run: hlint src test
