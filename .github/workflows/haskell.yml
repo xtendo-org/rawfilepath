@@ -1,0 +1,20 @@
+name: Haskell CI
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  stacktest:
+    name: stack test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.6.3' # Exact version of ghc to use
+          enable-stack: true
+          stack-version: 'latest'
+      - run: stack test
