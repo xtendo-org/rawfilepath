@@ -26,4 +26,6 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
-      - run: stack test
+      - run: |
+          stack init
+          stack test
