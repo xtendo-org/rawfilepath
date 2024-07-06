@@ -1,4 +1,7 @@
 -----------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------
+
 -- |
 -- Module      :  RawFilePath
 -- Copyright   :  (C) XT et al. 2017
@@ -46,18 +49,14 @@
 --
 -- For process-related functions, see "RawFilePath.Process" for a brief
 -- introduction and an example code.
---
------------------------------------------------------------------------------
-
-module RawFilePath
-    ( module RawFilePath.Directory
-    , module RawFilePath.Process
-    , RawFilePath
-    ) where
-
-import RawFilePath.Import
+module RawFilePath (
+  module RawFilePath.Directory,
+  module RawFilePath.Process,
+  RawFilePath,
+) where
 
 -- local modules
 
 import RawFilePath.Directory hiding (RawFilePath)
+import RawFilePath.Import
 import RawFilePath.Process hiding (RawFilePath)

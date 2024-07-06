@@ -1,12 +1,13 @@
-{-# language OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-import RawFilePath
 import qualified Data.ByteString as B
+import RawFilePath
+
 
 main :: IO ()
 main = do
-    p <- startProcess $ proc "echo" ["hello"] `setStdout` CreatePipe
-    result <- B.hGetContents (processStdout p)
-    _ <- waitForProcess p
+  p <- startProcess $ proc "echo" ["hello"] `setStdout` CreatePipe
+  result <- B.hGetContents (processStdout p)
+  _ <- waitForProcess p
 
-    print (result == "hello\n")
+  print (result == "hello\n")

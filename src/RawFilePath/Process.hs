@@ -1,4 +1,7 @@
 -----------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------
+
 -- |
 -- Module      :  RawFilePath.Process
 -- Copyright   :  (C) XT et al. 2017 - 2024
@@ -116,81 +119,81 @@
 -- 3. A lot more portability (doesn't require any language extension).
 --
 -- Enjoy.
---
------------------------------------------------------------------------------
+module RawFilePath.Process (
+  RawFilePath,
 
+  -- ** Configuring process
+  -- $configuring
+  ProcessConf,
+  proc,
 
-module RawFilePath.Process
-    ( RawFilePath
-    -- ** Configuring process
-    -- $configuring
-    , ProcessConf
-    , proc
+  -- *** Configuring process standard streams
+  StreamType,
+  CreatePipe (..),
+  Inherit (..),
+  NoStream (..),
+  UseHandle (..),
+  setStdin,
+  setStdout,
+  setStderr,
 
-    -- *** Configuring process standard streams
-    , StreamType
-    , CreatePipe(..)
-    , Inherit(..)
-    , NoStream(..)
-    , UseHandle(..)
-    , setStdin
-    , setStdout
-    , setStderr
+  -- ** Running process
+  Process,
+  startProcess,
 
-    -- ** Running process
-    , Process
-    , startProcess
+  -- ** Obtaining process streams
+  -- $obtaining
+  processStdin,
+  processStdout,
+  processStderr,
 
-    -- ** Obtaining process streams
-    -- $obtaining
-    , processStdin
-    , processStdout
-    , processStderr
+  -- ** Process completion
+  stopProcess,
+  terminateProcess,
+  waitForProcess,
 
-    -- ** Process completion
-    , stopProcess
-    , terminateProcess
-    , waitForProcess
+  -- ** Untyped process
+  -- $untyped
+  UnknownStream,
 
-    -- ** Untyped process
-    -- $untyped
-    , UnknownStream
-    -- *** Functions to untype process streams
-    , untypeProcess
-    , untypeProcessStdin
-    , untypeProcessStdout
-    , untypeProcessStderr
-    -- *** Functions to obtain @Maybe Handle@ from @UnknownStream@
-    , processStdinUnknown
-    , processStdoutUnknown
-    , processStderrUnknown
+  -- *** Functions to untype process streams
+  untypeProcess,
+  untypeProcessStdin,
+  untypeProcessStdout,
+  untypeProcessStderr,
 
-    -- ** Utility functions
-    -- $utility
-    , callProcess
-    , readProcessWithExitCode
+  -- *** Functions to obtain @Maybe Handle@ from @UnknownStream@
+  processStdinUnknown,
+  processStdoutUnknown,
+  processStderrUnknown,
 
-    ) where
+  -- ** Utility functions
+  -- $utility
+  callProcess,
+  readProcessWithExitCode,
+) where
 
 import RawFilePath.Import
-
 -- local modules
 
 import RawFilePath.Process.Basic
 import RawFilePath.Process.Common
 import RawFilePath.Process.Utility
 
+
 -- $configuring
 --
 -- Configuration of how a new sub-process will be launched.
---
+
+
 -- $obtaining
 --
 -- As the type signature suggests, these functions only work on processes whose
 -- stream in configured to 'CreatePipe'. This is the type-safe way of obtaining
 -- t'System.IO.Handle's instead of returning 'Maybe' t'System.IO.Handle's like
 -- the @process@ package does.
---
+
+
 -- $untyped
 --
 -- @since 1.1.1
@@ -248,7 +251,8 @@ import RawFilePath.Process.Utility
 --  2.  ... No longer need the compile-time guarantee of getting (or being
 --      prevented to get) t'System.IO.Handle's.
 --  3.  ... But still need the 'Process'
---
+
+
 -- $utility
 --
 -- These are utility functions; they can be implemented with the primary
