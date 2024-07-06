@@ -1,31 +1,81 @@
 name: Haskell CI
 
-on: [push, pull_request]
+on: push
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  stacktest:
-    name: stack test
+  restore:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: haskell-actions/setup@v2
-        with:
-          ghc-version: '9.6.3'
-          enable-stack: true
-          stack-version: 'latest'
+    - uses: actions/checkout@v4
 
-      - name: Cache
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-cabal
-        with:
-          path: ~/.cabal
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+    - name: Restore cached ~/.stack
+      id: cache-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.local/bin
+          ~/.stack
+        key: test-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
 
-      - run: |
-          stack init
-          stack test
+  install-stack:
+    runs-on: ubuntu-latest
+    needs: restore
+    steps:
+    - run: |
+        if [ ! -f ~/.local/bin/stack ]; then
+          curl -sSL https://get.haskellstack.org/ | sh
+        fi
+
+  install-fourmolu:
+    runs-on: ubuntu-latest
+    needs: restore
+    steps:
+    - run: |
+        if [ ! -f ~/.local/bin/fourmolu ]; then
+          curl -o ~/.local/bin/fourmolu -L https://github.com/fourmolu/fourmolu/releases/download/v0.16.2.0/fourmolu-0.16.2.0-linux-x86_64
+          chmod +x ~/.local/bin/fourmolu
+        fi
+
+  install-hlint:
+    runs-on: ubuntu-latest
+    needs: restore
+    steps:
+    - run: |
+        if [ ! -f ~/.local/bin/hlint ]; then
+          curl -o /tmp/hlint.tar.gz -L https://github.com/ndmitchell/hlint/releases/download/v3.8/hlint-3.8-x86_64-linux.tar.gz
+          tar xzf /tmp/hlint.tar.gz --directory=/tmp
+          cp /tmp/hlint-3.8/hlint ~/.local/bin/hlint
+        fi
+
+  stack-test:
+    needs: install-stack
+    runs-on: ubuntu-latest
+    run: |
+      stack init
+      stack test
+
+  fourmolu:
+    needs: install-fourmolu
+    runs-on: ubuntu-latest
+    run: fourmolu --mode check src test
+
+  hlint:
+    needs: setup
+    runs-on: ubuntu-latest
+    run: hlint src test
+
+  savecache:
+    needs: [stack-test, install-fourmolu, install-hlint]
+
+    steps:
+    - name: Save ~/.stack
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.local/bin
+          ~/.stack
+        key: test-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
