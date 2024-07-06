@@ -2,19 +2,113 @@ name: Haskell CI
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches:
+    - main
   pull_request:
-    branches: [ $default-branch ]
+    branches:
+    - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  stacktest:
-    name: stack test
+  install-stack:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: haskell-actions/setup@v2
-        with:
-          ghc-version: '9.6.3' # Exact version of ghc to use
-          enable-stack: true
-          stack-version: 'latest'
-      - run: stack test
+    - uses: actions/checkout@v4
+    - name: Restore cached Stack (binary)
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.local/bin/stack-2.15.7
+        key: stack-2.15.7
+    - run: |
+        if [ ! -f ~/.local/bin/stack-2.15.7 ]; then
+          mkdir -p ~/.local/bin
+          curl -o ~/.local/bin/stack-2.15.7 -L https://github.com/commercialhaskell/stack/releases/download/v2.15.7/stack-2.15.7-linux-x86_64-bin
+        fi
+        chmod +x ~/.local/bin/stack-2.15.7
+    - name: Save Stack (binary)
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.local/bin/stack-2.15.7
+        key: stack-2.15.7
+
+  stack-test:
+    runs-on: ubuntu-latest
+    needs: install-stack
+    strategy:
+      matrix:
+        resolver: [nightly-2023-08-24, nightly-2024-07-05, lts-21.0, lts-22.28]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Restore cached Stack
+      id: restore-stack-binary
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.local/bin/stack-2.15.7
+        key: stack-2.15.7
+    - if: steps.restore-stack-binary.outputs.cache-hit != 'true'
+      run: |
+        echo "stack-2.15.7 cannot be found (This should not happen; There's something wrong with the workflow file)"
+        exit 1
+    - name: Restore cached ~/.stack
+      id: restore-stack-directory
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.stack
+        key: stack-dir-${{ matrix.resolver }}
+    - run: |
+        chmod +x ~/.local/bin/stack-2.15.7
+        ~/.local/bin/stack-2.15.7 init --resolver=${{ matrix.resolver }}
+        ~/.local/bin/stack-2.15.7 test --resolver=${{ matrix.resolver }}
+    - name: Save ~/.stack
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.stack
+        key: stack-dir-${{ matrix.resolver }}
+
+  fourmolu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Restore cached fourmolu
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.local/bin/fourmolu
+        key: fourmolu-0.16.2.0
+    - run: |
+        if [ ! -f ~/.local/bin/fourmolu ]; then
+          mkdir -p ~/.local/bin
+          curl -o ~/.local/bin/fourmolu -L https://github.com/fourmolu/fourmolu/releases/download/v0.16.2.0/fourmolu-0.16.2.0-linux-x86_64
+          chmod +x ~/.local/bin/fourmolu
+        fi
+    - name: Save fourmolu cache
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.local/bin/fourmolu
+        key: fourmolu-0.16.2.0
+    - run: ~/.local/bin/fourmolu --mode check src test
+
+  hlint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Restore cached hlint
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.local/bin/hlint
+        key: hlint-3.8
+    - run: |
+        if [ ! -f ~/.local/bin/hlint ]; then
+          mkdir -p ~/.local/bin
+          curl -o /tmp/hlint.tar.gz -L https://github.com/ndmitchell/hlint/releases/download/v3.8/hlint-3.8-x86_64-linux.tar.gz
+          tar xzf /tmp/hlint.tar.gz --directory=/tmp
+          cp /tmp/hlint-3.8/hlint ~/.local/bin/hlint
+        fi
+    - name: Save hlint cache
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.local/bin/hlint
+        key: hlint-3.8
+    - run: ~/.local/bin/hlint src test

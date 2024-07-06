@@ -40,7 +40,6 @@ import GHC.IO.Handle.FD as Module (mkHandleFromFD)
 import RawFilePath.Import
 import System.Posix.Internals (FD)
 
-
 -- Original declarations
 
 -- | Represents a stream whose creation information is unknown; We don't have
@@ -48,7 +47,6 @@ import System.Posix.Internals (FD)
 --
 -- @since 1.1.1
 data UnknownStream
-
 
 -- | The process configuration that is needed for creating new processes. Use
 -- 'proc' to make one.
@@ -91,7 +89,6 @@ data ProcessConf stdin stdout stderr = ProcessConf
   -- Default: @Nothing@
   }
 
-
 -- | Create a process configuration with the default settings.
 proc
   :: RawFilePath
@@ -116,7 +113,6 @@ proc cmd args =
     , childUser = Nothing
     }
 
-
 -- | Control how the standard input of the process will be initialized.
 setStdin
   :: (StreamType newStdin)
@@ -125,9 +121,7 @@ setStdin
   -> ProcessConf newStdin stdout stderr
 setStdin p newStdin = p{cfgStdin = newStdin}
 
-
 infixl 4 `setStdin`
-
 
 -- | Control how the standard output of the process will be initialized.
 setStdout
@@ -137,9 +131,7 @@ setStdout
   -> ProcessConf stdin newStdout stderr
 setStdout p newStdout = p{cfgStdout = newStdout}
 
-
 infixl 4 `setStdout`
-
 
 -- | Control how the standard error of the process will be initialized.
 setStderr
@@ -149,9 +141,7 @@ setStderr
   -> ProcessConf stdin stdout newStderr
 setStderr p newStderr = p{cfgStderr = newStderr}
 
-
 infixl 4 `setStderr`
-
 
 -- | The process type. The three type variables denote how its standard
 -- streams were initialized.
@@ -164,13 +154,11 @@ data Process stdin stdout stderr = Process
   , waitpidLock :: !(MVar ())
   }
 
-
 -- | Take a process and return its standard input handle.
 processStdin :: Process CreatePipe stdout stderr -> Handle
 processStdin Process{..} = fromMaybe err procStdin
  where
   err = error "This can't happen: stdin is CreatePipe but missing"
-
 
 -- | Take a process and return its standard output handle.
 processStdout :: Process stdin CreatePipe stderr -> Handle
@@ -178,32 +166,26 @@ processStdout Process{..} = fromMaybe err procStdout
  where
   err = error "This can't happen: stdout is CreatePipe but missing"
 
-
 -- | Take a process and return its standard error handle.
 processStderr :: Process stdin stdout CreatePipe -> Handle
 processStderr Process{..} = fromMaybe err procStderr
  where
   err = error "This can't happen: stderr is CreatePipe but missing"
 
-
 -- | Create a new pipe for the stream. You get a new t'System.IO.Handle'.
 data CreatePipe = CreatePipe deriving (Show)
-
 
 -- | Inherit the parent (current) process handle. The child will share the
 -- stream. For example, if the child writes anything to stdout, it will all go
 -- to the parent's stdout.
 data Inherit = Inherit deriving (Show)
 
-
 -- | No stream handle will be passed. Use when you don't want to communicate
 -- with a stream. For example, to run something silently.
 data NoStream = NoStream deriving (Show)
 
-
 -- | Use the supplied t'System.IO.Handle'.
 data UseHandle = UseHandle Handle deriving (Show)
-
 
 -- | The class of types that determine the standard stream of a sub-process.
 -- You can decide how to initialize the standard streams (stdin, stdout, and
@@ -215,21 +197,17 @@ class StreamType c where
   willCreateHandle = undefined
   {-# MINIMAL #-}
 
-
 instance StreamType CreatePipe where
   mbFd _ _ = return (-1)
   willCreateHandle _ = True
-
 
 instance StreamType Inherit where
   mbFd std _ = return std
   willCreateHandle _ = False
 
-
 instance StreamType NoStream where
   mbFd _ _ = return (-2)
   willCreateHandle _ = False
-
 
 instance StreamType UseHandle where
   mbFd _std (UseHandle hdl) =
@@ -249,17 +227,14 @@ instance StreamType UseHandle where
             `ioeSetErrorString` "handle is not a file descriptor"
   willCreateHandle _ = False
 
-
 -- Declarations from the process package (modified)
 
 type PHANDLE = CPid
-
 
 data ProcessHandle__
   = OpenHandle PHANDLE
   | OpenExtHandle PHANDLE PHANDLE PHANDLE
   | ClosedHandle ExitCode
-
 
 modifyProcessHandle
   :: Process stdin stdout stderr
@@ -267,24 +242,20 @@ modifyProcessHandle
   -> IO a
 modifyProcessHandle p = modifyMVar (phandle p)
 
-
 withProcessHandle
   :: Process stdin stdout stderr -> (ProcessHandle__ -> IO a) -> IO a
 withProcessHandle p = withMVar (phandle p)
-
 
 fdStdin, fdStdout, fdStderr :: FD
 fdStdin = 0
 fdStdout = 1
 fdStderr = 2
 
-
 mbPipe :: (StreamType c) => c -> Ptr FD -> IOMode -> IO (Maybe Handle)
 mbPipe streamConf pfd mode =
   if willCreateHandle streamConf
     then fmap Just (pfdToHandle pfd mode)
     else return Nothing
-
 
 -- | Deliberately "un-type" all three type parameters of a process. Then, the
 -- three standard streams will be available as 'Maybe' t'System.IO.Handle'.
@@ -302,7 +273,6 @@ untypeProcess
   -> Process UnknownStream UnknownStream UnknownStream
 untypeProcess p = p{phandle = phandle p}
 
-
 -- | Deliberately "un-type" the standard input stream (stdin) type parameter of
 -- a process. After this, use 'processStdinUnknown' to access 'Maybe'
 -- t'System.IO.Handle'.
@@ -312,7 +282,6 @@ untypeProcessStdin
   :: Process stdin stdout stderr
   -> Process UnknownStream stdout stderr
 untypeProcessStdin p = p{procStdin = procStdin p}
-
 
 -- | Deliberately "un-type" the standard output stream (stdout) type parameter of
 -- a process. After this, use 'processStdinUnknown' to access 'Maybe'
@@ -324,7 +293,6 @@ untypeProcessStdout
   -> Process stdin UnknownStream stderr
 untypeProcessStdout p = p{procStdout = procStdout p}
 
-
 -- | Deliberately "un-type" the standard error stream (stderr) type parameter
 -- of a process. After this, use 'processStdinUnknown' to access 'Maybe'
 -- t'System.IO.Handle'.
@@ -335,14 +303,12 @@ untypeProcessStderr
   -> Process stdin stdout UnknownStream
 untypeProcessStderr p = p{procStderr = procStderr p}
 
-
 -- | Obtain the stdin t'System.IO.Handle' from a process. The result could be
 -- 'Nothing', so dealing with that is the caller's responsibility.
 --
 -- @since 1.1.1
 processStdinUnknown :: Process UnknownStream stdout stderr -> Maybe Handle
 processStdinUnknown = procStdin
-
 
 -- | Obtain the stdout t'System.IO.Handle' from a process. There is no
 -- guarantee; It may return 'Nothing', and dealing with it is a runtime
@@ -352,7 +318,6 @@ processStdinUnknown = procStdin
 processStdoutUnknown :: Process stdin UnknownStream stderr -> Maybe Handle
 processStdoutUnknown = procStdout
 
-
 -- | Obtain the stderr t'System.IO.Handle' from a process. There is no
 -- guarantee; It may return 'Nothing', and dealing with it is a runtime
 -- responsibility.
@@ -360,7 +325,6 @@ processStdoutUnknown = procStdout
 -- @since 1.1.1
 processStderrUnknown :: Process stdin stdout UnknownStream -> Maybe Handle
 processStderrUnknown = procStderr
-
 
 pfdToHandle :: Ptr FD -> IOMode -> IO Handle
 pfdToHandle pfd mode = do

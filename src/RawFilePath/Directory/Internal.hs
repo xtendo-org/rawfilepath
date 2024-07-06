@@ -3,13 +3,11 @@ module RawFilePath.Directory.Internal where
 import RawFilePath.Import
 import qualified System.Posix.ByteString as U
 
-
 ioeAddLocation :: IOError -> String -> IOError
 ioeAddLocation e loc = ioeSetLocation e newLoc
  where
   newLoc = loc <> if null oldLoc then "" else ":" <> oldLoc
   oldLoc = ioeGetLocation e
-
 
 data FileType
   = File
@@ -17,7 +15,6 @@ data FileType
   | Directory
   | DirectoryLink
   deriving (Bounded, Enum, Eq, Ord, Read, Show)
-
 
 fileTypeFromMetadata :: U.FileStatus -> FileType
 fileTypeFromMetadata stat

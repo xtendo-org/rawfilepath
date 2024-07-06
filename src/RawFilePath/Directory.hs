@@ -47,7 +47,6 @@ import RawFilePath.Directory.Internal
 import RawFilePath.Import
 import qualified System.Posix.ByteString as U
 
-
 -- | Test whether the given path points to an existing filesystem object.  If
 -- the user lacks necessary permissions to search the parent directories, this
 -- function may return false even if the file does actually exist.
@@ -56,7 +55,6 @@ doesPathExist path =
   (True <$ U.getFileStatus path)
     `catchIOError` const (return False)
 
-
 -- | Return 'True' if the argument file exists and is either a directory or a
 -- symbolic link to a directory, and 'False' otherwise.
 doesDirectoryExist :: RawFilePath -> IO Bool
@@ -64,14 +62,12 @@ doesDirectoryExist path =
   pathIsDirectory path
     `catchIOError` const (return False)
 
-
 -- | Return 'True' if the argument file exists and is not a directory, and
 -- 'False' otherwise.
 doesFileExist :: RawFilePath -> IO Bool
 doesFileExist path =
   (not <$> pathIsDirectory path)
     `catchIOError` const (return False)
-
 
 -- | Returns the current user's home directory. More specifically, the value
 -- of the @HOME@ environment variable.
@@ -92,13 +88,11 @@ doesFileExist path =
 getHomeDirectory :: IO (Maybe RawFilePath)
 getHomeDirectory = U.getEnv "HOME"
 
-
 -- | Return the current directory for temporary files.  It first returns the
 -- value of the @TMPDIR@ environment variable or \"\/tmp\" if the variable
 -- isn\'t defined.
 getTemporaryDirectory :: IO ByteString
 getTemporaryDirectory = fromMaybe "/tmp" <$> U.getEnv "TMPDIR"
-
 
 -- | Get a list of files in the specified directory, excluding "." and ".."
 --
@@ -112,7 +106,6 @@ listDirectory
 listDirectory dirPath = filter f <$> getDirectoryFiles dirPath
  where
   f p = p /= "." && p /= ".."
-
 
 -- | Get a list of files in the specified directory, including "." and ".."
 --
@@ -134,7 +127,6 @@ getDirectoryFiles dirPath = bracket open close repeatRead
       else do
         rest <- repeatRead stream
         return $ d : rest
-
 
 -- | Recursively get all files in all subdirectories of the specified
 -- directory.
@@ -163,7 +155,6 @@ getDirectoryFilesRecursive path = do
           )
         . U.isDirectory
 
-
 -- | Create a new directory.
 --
 -- > ghci> createDirectory "/tmp/mydir"
@@ -174,7 +165,6 @@ getDirectoryFilesRecursive path = do
 -- > [".","..","anotherdir"]
 createDirectory :: RawFilePath -> IO ()
 createDirectory dir = U.createDirectory dir 0o755
-
 
 -- | Create a new directory if it does not already exist.  If the first
 -- argument is 'True' the function will also create all parent directories
@@ -219,12 +209,10 @@ createDirectoryIfMissing willCreateParents path
         | otherwise -> ioError e
   parents = reverse $ scanl1 (+/+) $ B.split (w8 '/') $ stripSlash path
 
-
 -- | Remove a file. This function internally calls @unlink@. If the file does
 -- not exist, an exception is thrown.
 removeFile :: RawFilePath -> IO ()
 removeFile = U.removeLink
-
 
 -- | A function that "tries" to remove a file. If the file does not exist,
 -- nothing happens.
@@ -232,12 +220,10 @@ tryRemoveFile :: RawFilePath -> IO ()
 tryRemoveFile path = catchIOError (U.removeLink path) $
   \e -> unless (isDoesNotExistError e) $ ioError e
 
-
 -- | Remove a directory. The target directory needs to be empty; Otherwise an
 -- exception will be thrown.
 removeDirectory :: RawFilePath -> IO ()
 removeDirectory = U.removeDirectory
-
 
 -- | Remove an existing directory /dir/ together with its contents and
 -- subdirectories. Within this directory, symbolic links are removed without
@@ -256,7 +242,6 @@ removeDirectoryRecursive path =
  where
   err = mkIOError InappropriateType "" Nothing (Just (B8.unpack path))
 
-
 -- | Remove an existing file or directory at /path/ together with its contents
 -- and subdirectories. Symbolic links are removed without affecting their the
 -- targets.
@@ -269,7 +254,6 @@ removePathRecursive path =
       DirectoryLink -> U.removeDirectory path
       _ -> U.removeLink path
 
-
 -- | Remove the contents of the directory /dir/ recursively. Symbolic links
 -- are removed without affecting their the targets.
 removeContentsRecursive :: RawFilePath -> IO ()
@@ -279,22 +263,17 @@ removeContentsRecursive path =
     mapM_ removePathRecursive [path +/+ x | x <- cont]
     U.removeDirectory path
 
-
 w8 :: Char -> Word8
 w8 = fromIntegral . ord
-
 
 stripSlash :: ByteString -> ByteString
 stripSlash p = if B.last p == w8 '/' then B.init p else p
 
-
 pathIsDirectory :: RawFilePath -> IO Bool
 pathIsDirectory path = U.isDirectory <$> U.getFileStatus path
 
-
 -- An extremely simplistic approach for path concatenation.
 infixr 5 +/+
-
 
 (+/+) :: RawFilePath -> RawFilePath -> RawFilePath
 a +/+ b = mconcat [a, "/", b]
