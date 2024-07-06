@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
+    - run: mkdir -p ~/.local.bin
     - name: Restore cached ~/.stack
       id: cache-restore
       uses: actions/cache/restore@v4
@@ -19,7 +19,7 @@ jobs:
         path: |
           ~/.local/bin
           ~/.stack
-        key: test-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
+        key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml', 'stack.yaml.lock') }}
 
   install-stack:
     runs-on: ubuntu-latest
@@ -82,4 +82,4 @@ jobs:
         path: |
           ~/.local/bin
           ~/.stack
-        key: test-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
+        key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml', 'stack.yaml.lock') }}
