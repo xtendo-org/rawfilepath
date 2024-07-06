@@ -37,6 +37,9 @@ jobs:
   stack-test:
     runs-on: ubuntu-latest
     needs: install-stack
+    strategy:
+      matrix:
+        resolver: [nightly-2023-08-24, nightly-2024-07-05, lts-21.0, lts-22.28]
     steps:
     - uses: actions/checkout@v4
     - name: Restore cached Stack
@@ -54,16 +57,16 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ~/.stack
-        key: stack-dir-lts-22.28
+        key: stack-dir-${{ matrix.resolver }}
     - run: |
         chmod +x ~/.local/bin/stack-2.15.7
-        ~/.local/bin/stack-2.15.7 init --resolver=lts-22.28
-        ~/.local/bin/stack-2.15.7 test --resolver=lts-22.28
+        ~/.local/bin/stack-2.15.7 init --resolver=${{ matrix.resolver }}
     - name: Save ~/.stack
       uses: actions/cache/save@v4
       with:
         path: ~/.stack
-        key: stack-dir-lts-22.28
+        key: stack-dir-${{ matrix.resolver }}
+    - run: ~/.local/bin/stack-2.15.7 test --resolver=${{ matrix.resolver }}
 
   fourmolu:
     runs-on: ubuntu-latest
