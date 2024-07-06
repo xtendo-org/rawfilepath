@@ -73,6 +73,7 @@ jobs:
 
   savecache:
     needs: [stack-test, install-fourmolu, install-hlint]
+    runs-on: ubuntu-latest
 
     steps:
     - name: Save ~/.stack
