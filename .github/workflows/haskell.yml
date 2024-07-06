@@ -27,6 +27,7 @@ jobs:
           mkdir -p ~/.local/bin
           curl -o ~/.local/bin/stack-2.15.7 -L https://github.com/commercialhaskell/stack/releases/download/v2.15.7/stack-2.15.7-linux-x86_64-bin
         fi
+        chmod +x ~/.local/bin/stack-2.15.7
     - name: Save ~/.stack
       uses: actions/cache/save@v4
       with:
