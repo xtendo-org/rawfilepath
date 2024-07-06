@@ -1,6 +1,12 @@
 name: Haskell CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -11,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: mkdir -p ~/.local.bin
+    - run: mkdir -p ~/.local/bin
     - name: Restore cached ~/.stack
       id: cache-restore
       uses: actions/cache/restore@v4
