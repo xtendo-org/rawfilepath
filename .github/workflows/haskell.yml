@@ -85,7 +85,6 @@ jobs:
     - run: ~/.local/bin/fourmolu --mode check src test
 
   hlint:
-    needs: restore
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
