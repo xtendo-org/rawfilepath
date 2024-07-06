@@ -1,6 +1,6 @@
 name: Haskell CI
 
-on: push
+on: pull_request
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -56,8 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - run: |
-      stack init
-      stack test
+        stack init
+        stack test
 
   fourmolu:
     needs: install-fourmolu
