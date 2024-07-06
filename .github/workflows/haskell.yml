@@ -33,7 +33,7 @@ jobs:
     steps:
     - run: |
         if [ ! -f ~/.local/bin/stack ]; then
-          curl -sSL https://get.haskellstack.org/ | sh
+          curl -sSL https://get.haskellstack.org/ | sh -s - -f
         fi
 
   install-fourmolu:
@@ -42,6 +42,7 @@ jobs:
     steps:
     - run: |
         if [ ! -f ~/.local/bin/fourmolu ]; then
+          mkdir -p ~/.local/bin
           curl -o ~/.local/bin/fourmolu -L https://github.com/fourmolu/fourmolu/releases/download/v0.16.2.0/fourmolu-0.16.2.0-linux-x86_64
           chmod +x ~/.local/bin/fourmolu
         fi
@@ -52,6 +53,7 @@ jobs:
     steps:
     - run: |
         if [ ! -f ~/.local/bin/hlint ]; then
+          mkdir -p ~/.local/bin
           curl -o /tmp/hlint.tar.gz -L https://github.com/ndmitchell/hlint/releases/download/v3.8/hlint-3.8-x86_64-linux.tar.gz
           tar xzf /tmp/hlint.tar.gz --directory=/tmp
           cp /tmp/hlint-3.8/hlint ~/.local/bin/hlint
@@ -62,20 +64,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - run: |
-        stack init
-        stack test
+        ~/.local/bin/stack init
+        ~/.local/bin/stack test
 
   fourmolu:
     needs: install-fourmolu
     runs-on: ubuntu-latest
     steps:
-    - run: fourmolu --mode check src test
+    - run: ~/.local/bin/fourmolu --mode check src test
 
   hlint:
     needs: install-hlint
     runs-on: ubuntu-latest
     steps:
-    - run: hlint src test
+    - run: ~/.local/bin/hlint src test
 
   savecache:
     needs: [stack-test, install-fourmolu, install-hlint]
