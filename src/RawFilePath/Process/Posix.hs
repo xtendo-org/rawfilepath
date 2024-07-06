@@ -25,13 +25,10 @@ import System.Posix.Process.Internals (c_execvpe, pPrPr_disableITimers)
 import System.Posix.Signals
 import qualified System.Posix.Signals as Sig
 
-
 #include "processFlags.c"
-
 
 closePHANDLE :: PHANDLE -> IO ()
 closePHANDLE _ = return ()
-
 
 -- ----------------------------------------------------------------------------
 -- Utils
@@ -46,7 +43,6 @@ withManyByteString bs action =
   ptrLength = (length bs + 1) * sizeOf (undefined :: Ptr CString)
   wholeLength = sum (map (\(PS _ _ l) -> l + 1) bs)
 
-
 copyByteStrings :: [ByteString] -> Ptr Word8 -> Ptr (Ptr Word8) -> IO ()
 copyByteStrings [] _ cs = poke cs nullPtr
 copyByteStrings (PS fp o l : xs) buf cs = withForeignPtr fp $ \p -> do
@@ -58,13 +54,11 @@ copyByteStrings (PS fp o l : xs) buf cs = withForeignPtr fp $ \p -> do
     (buf `plusPtr` (l + 1))
     (cs `plusPtr` sizeOf (undefined :: Ptr CString))
 
-
 withCEnvironment
   :: [(ByteString, ByteString)] -> (Ptr CString -> IO a) -> IO a
 withCEnvironment envir act =
   let env' = map (\(name, val) -> name <> "=" <> val) envir
    in withManyByteString env' act
-
 
 -- -----------------------------------------------------------------------------
 -- POSIX runProcess with signal handling in the child
@@ -129,11 +123,9 @@ createProcessInternal ProcessConf{..} =
                     lock <- newMVar ()
                     return (Process hIn hOut hErr mvarProcHandle delegateCtlc lock)
 
-
 {-# NOINLINE runInteractiveProcessLock #-}
 runInteractiveProcessLock :: MVar ()
 runInteractiveProcessLock = unsafePerformIO $ newMVar ()
-
 
 -- ----------------------------------------------------------------------------
 -- Delegated control-C handling on Unix
@@ -157,7 +149,6 @@ runInteractiveProcessDelegateCtlc
   :: MVar (Maybe (Int, Sig.Handler, Sig.Handler))
 runInteractiveProcessDelegateCtlc = unsafePerformIO $ newMVar Nothing
 
-
 startDelegateControlC :: IO ()
 startDelegateControlC =
   modifyMVar_ runInteractiveProcessDelegateCtlc $ \case
@@ -176,7 +167,6 @@ startDelegateControlC =
       let !count' = count + 1
       return (Just (count', old_int, old_quit))
 
-
 stopDelegateControlC :: IO ()
 stopDelegateControlC =
   modifyMVar_ runInteractiveProcessDelegateCtlc $ \case
@@ -190,7 +180,6 @@ stopDelegateControlC =
       let !count' = count - 1
       return (Just (count', old_int, old_quit))
     Nothing -> return Nothing -- should be impossible
-
 
 endDelegateControlC :: ExitCode -> IO ()
 endDelegateControlC exitCode = do
@@ -210,7 +199,6 @@ endDelegateControlC exitCode = do
    where
     sig = fromIntegral (-n)
 
-
 foreign import ccall unsafe "runInteractiveProcess"
   c_runInteractiveProcess
     :: Ptr CString
@@ -229,14 +217,12 @@ foreign import ccall unsafe "runInteractiveProcess"
     -> Ptr CString
     -> IO PHANDLE
 
-
 createPipe :: IO (Handle, Handle)
 createPipe = do
   (readfd, writefd) <- Posix.createPipe
   readh <- Posix.fdToHandle readfd
   writeh <- Posix.fdToHandle writefd
   return (readh, writeh)
-
 
 createPipeInternalFd :: IO (FD, FD)
 createPipeInternalFd = do

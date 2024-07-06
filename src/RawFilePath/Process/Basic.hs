@@ -9,7 +9,6 @@ import RawFilePath.Process.Common
 import RawFilePath.Process.Internal
 import RawFilePath.Process.Posix
 
-
 -- | Start a new sub-process with the given configuration.
 startProcess
   :: (StreamType stdin, StreamType stdout, StreamType stderr)
@@ -17,14 +16,12 @@ startProcess
   -> IO (Process stdin stdout stderr)
 startProcess = createProcessInternal
 
-
 -- | Stop a sub-process. For now it simply calls 'terminateProcess' and then
 -- 'waitForProcess'.
 stopProcess :: Process stdin stdout stderr -> IO ExitCode
 stopProcess p = do
   terminateProcess p
   waitForProcess p
-
 
 -- | Wait (block) for a sub-process to exit and obtain its exit code.
 waitForProcess
@@ -63,7 +60,6 @@ waitForProcess ph = lockWaitpid $ do
   -- https://github.com/haskell/process/pull/58 for further discussion
   lockWaitpid m = withMVar (waitpidLock ph) $ \() -> m
   delegatingCtlc = mbDelegateCtlc ph
-
 
 -- | Terminate a sub-process by sending SIGTERM to it.
 terminateProcess :: Process stdin stdout stderr -> IO ()

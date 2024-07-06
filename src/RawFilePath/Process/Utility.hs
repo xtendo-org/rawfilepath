@@ -16,7 +16,6 @@ import RawFilePath.Import
 import RawFilePath.Process.Basic
 import RawFilePath.Process.Common
 
-
 -- | Create a new process with the given configuration, and wait for it to
 -- finish. Note that this will set all streams to `NoStream`, so the process
 -- will be completely silent. If you need the output data from the process, use
@@ -31,7 +30,6 @@ callProcess conf = start >>= waitForProcess
         , cfgStdout = NoStream
         , cfgStderr = NoStream
         }
-
 
 -- | Fork an external process, read its standard output and standard error
 -- strictly, blocking until the process terminates, and return them with the
@@ -51,7 +49,6 @@ readProcessWithExitCode conf = do
   stderrB <- hGetAll (processStderr process)
   exitCode <- waitForProcess process
   return (exitCode, stdoutB, stderrB)
-
 
 -- utility functions
 

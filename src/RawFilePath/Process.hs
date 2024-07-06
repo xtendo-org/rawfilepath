@@ -180,11 +180,9 @@ import RawFilePath.Process.Basic
 import RawFilePath.Process.Common
 import RawFilePath.Process.Utility
 
-
 -- $configuring
 --
 -- Configuration of how a new sub-process will be launched.
-
 
 -- $obtaining
 --
@@ -192,7 +190,6 @@ import RawFilePath.Process.Utility
 -- stream in configured to 'CreatePipe'. This is the type-safe way of obtaining
 -- t'System.IO.Handle's instead of returning 'Maybe' t'System.IO.Handle's like
 -- the @process@ package does.
-
 
 -- $untyped
 --
@@ -251,7 +248,6 @@ import RawFilePath.Process.Utility
 --  2.  ... No longer need the compile-time guarantee of getting (or being
 --      prevented to get) t'System.IO.Handle's.
 --  3.  ... But still need the 'Process'
-
 
 -- $utility
 --
