@@ -54,19 +54,22 @@ jobs:
   stack-test:
     needs: install-stack
     runs-on: ubuntu-latest
-    run: |
+    steps:
+    - run: |
       stack init
       stack test
 
   fourmolu:
     needs: install-fourmolu
     runs-on: ubuntu-latest
-    run: fourmolu --mode check src test
+    steps:
+    - run: fourmolu --mode check src test
 
   hlint:
     needs: setup
     runs-on: ubuntu-latest
-    run: hlint src test
+    steps:
+    - run: hlint src test
 
   savecache:
     needs: [stack-test, install-fourmolu, install-hlint]
