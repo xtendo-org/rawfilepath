@@ -13,44 +13,87 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  restore:
+  install-stack:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - run: mkdir -p ~/.local/bin
     - name: Restore cached ~/.stack
       id: cache-restore
       uses: actions/cache/restore@v4
       with:
         path: |
-          ~/.local/bin
+          ~/.local/bin/stack
           ~/.stack
-        key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml', 'stack.yaml.lock') }}
-
-  install-stack:
-    runs-on: ubuntu-latest
-    needs: restore
-    steps:
+        key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml') }}
     - run: |
         if [ ! -f ~/.local/bin/stack ]; then
           curl -sSL https://get.haskellstack.org/ | sh -s - -f
         fi
+    - name: Save ~/.stack
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.local/bin/stack
+          ~/.stack
+        key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml') }}
 
-  install-fourmolu:
+  stack-test:
     runs-on: ubuntu-latest
-    needs: restore
+    needs: install-stack
     steps:
+    - uses: actions/checkout@v4
+    - name: Restore cached ~/.stack
+      id: cache-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.local/bin/stack
+          ~/.stack
+        key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml') }}
+    - if: steps.cache-restore.outputs.cache-hit != 'true'
+      run: exit 1
+    - run: |
+        ~/.local/bin/stack init
+        ~/.local/bin/stack test
+    - name: Save ~/.stack
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.local/bin/stack
+          ~/.stack
+        key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml') }}
+
+  fourmolu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Restore cached fourmolu
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.local/bin/fourmolu
+        key: fourmolu-0.16.2.0
     - run: |
         if [ ! -f ~/.local/bin/fourmolu ]; then
           mkdir -p ~/.local/bin
           curl -o ~/.local/bin/fourmolu -L https://github.com/fourmolu/fourmolu/releases/download/v0.16.2.0/fourmolu-0.16.2.0-linux-x86_64
           chmod +x ~/.local/bin/fourmolu
         fi
+    - name: Save fourmolu cache
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.local/bin/fourmolu
+        key: fourmolu-0.16.2.0
+    - run: ~/.local/bin/fourmolu --mode check src test
 
-  install-hlint:
-    runs-on: ubuntu-latest
+  hlint:
     needs: restore
+    runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v4
+    - name: Restore cached hlint
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.local/bin/hlint
+        key: hlint-3.8
     - run: |
         if [ ! -f ~/.local/bin/hlint ]; then
           mkdir -p ~/.local/bin
@@ -58,36 +101,9 @@ jobs:
           tar xzf /tmp/hlint.tar.gz --directory=/tmp
           cp /tmp/hlint-3.8/hlint ~/.local/bin/hlint
         fi
-
-  stack-test:
-    needs: install-stack
-    runs-on: ubuntu-latest
-    steps:
-    - run: |
-        ~/.local/bin/stack init
-        ~/.local/bin/stack test
-
-  fourmolu:
-    needs: install-fourmolu
-    runs-on: ubuntu-latest
-    steps:
-    - run: ~/.local/bin/fourmolu --mode check src test
-
-  hlint:
-    needs: install-hlint
-    runs-on: ubuntu-latest
-    steps:
-    - run: ~/.local/bin/hlint src test
-
-  savecache:
-    needs: [stack-test, install-fourmolu, install-hlint]
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Save ~/.stack
+    - name: Save hlint cache
       uses: actions/cache/save@v4
       with:
-        path: |
-          ~/.local/bin
-          ~/.stack
-        key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml', 'stack.yaml.lock') }}
+        path: ~/.local/bin/hlint
+        key: hlint-3.8
+    - run: ~/.local/bin/hlint src test
