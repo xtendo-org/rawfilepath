@@ -27,7 +27,7 @@ jobs:
         key: test-${{ runner.os }}-${{ hashFiles('stack.lts.yaml') }}
     - run: |
         if [ ! -f ~/.local/bin/stack ]; then
-          curl -sSL https://get.haskellstack.org/ | sh -s - -f
+          curl -sSL https://get.haskellstack.org/ | sh -s - -d ~/.local/bin
         fi
     - name: Save ~/.stack
       uses: actions/cache/save@v4
