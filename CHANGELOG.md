@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.1.1 - Unreleased
+
+- Fixed the deprecated `memcpy` (now uses `Foreign.Marshal.Utils.copyBytes` instead)
+- Added the "bailout" series of functions for un-typing processes.
+
 ## 1.1.0 - 2023-08-29
 
 ### Fixed

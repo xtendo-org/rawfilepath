@@ -1,11 +1,11 @@
 name: rawfilepath
-version: 1.1.0
+version: 1.1.1
 synopsis: Use RawFilePath instead of FilePath
 description: Please see README.md
 category: System
 author: XT et al.
 maintainer: git@xtendo.org
-copyright: (C) 2016-2023 XT et al.
+copyright: (C) 2016-2024 XT et al.
 license: Apache-2.0
 github: xtendo-org/rawfilepath
 extra-source-files:

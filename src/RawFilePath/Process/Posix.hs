@@ -15,7 +15,7 @@ import RawFilePath.Import
 
 -- extra modules
 
-import Data.ByteString.Internal (ByteString(..), memcpy)
+import Data.ByteString.Internal (ByteString(..))
 import System.Posix.ByteString.FilePath (withFilePath)
 import System.Posix.Internals hiding (withFilePath)
 import System.Posix.Process.Internals ( pPrPr_disableITimers, c_execvpe )
@@ -48,7 +48,7 @@ withManyByteString bs action =
 copyByteStrings :: [ByteString] -> Ptr Word8 -> Ptr (Ptr Word8) -> IO ()
 copyByteStrings [] _ cs = poke cs nullPtr
 copyByteStrings (PS fp o l : xs) buf cs = withForeignPtr fp $ \ p -> do
-    memcpy buf (p `plusPtr` o) (fromIntegral l)
+    copyBytes buf (p `plusPtr` o) (fromIntegral l)
     pokeByteOff buf l (0 :: Word8)
     poke cs (buf :: Ptr Word8)
     copyByteStrings xs (buf `plusPtr` (l + 1))

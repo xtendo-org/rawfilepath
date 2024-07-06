@@ -16,6 +16,15 @@ module RawFilePath.Process.Common
     , setStdout
     , setStderr
 
+    , UnknownStream
+    , untypeProcess
+    , untypeProcessStdin
+    , untypeProcessStdout
+    , untypeProcessStderr
+    , processStdinUnknown
+    , processStdoutUnknown
+    , processStderrUnknown
+
     , PHANDLE
     , ProcessHandle__(..)
     , modifyProcessHandle
@@ -154,7 +163,8 @@ processStderr Process{..} = fromMaybe err procStderr
   where
     err = error "This can't happen: stderr is CreatePipe but missing"
 
--- | Create a new pipe for the stream. You get a new 'Handle'.
+
+-- | Create a new pipe for the stream. You get a new t'System.IO.Handle'.
 data CreatePipe = CreatePipe deriving Show
 -- | Inherit the parent (current) process handle. The child will share the
 -- stream. For example, if the child writes anything to stdout, it will all go
@@ -163,7 +173,7 @@ data Inherit = Inherit deriving Show
 -- | No stream handle will be passed. Use when you don't want to communicate
 -- with a stream. For example, to run something silently.
 data NoStream = NoStream deriving Show
--- | Use the supplied 'Handle'.
+-- | Use the supplied t'System.IO.Handle'.
 data UseHandle = UseHandle Handle deriving Show
 
 -- | The class of types that determine the standard stream of a sub-process.
@@ -242,3 +252,80 @@ pfdToHandle pfd mode = do
   let enc = localeEncoding
 #endif
   mkHandleFromFD fD' fd_type filepath mode False {-is_socket-} (Just enc)
+
+
+-- | Represents a stream whose creation information is unknown; We don't have
+-- any type system guarantee of the t'System.IO.Handle'\'s existence.
+--
+-- @since 1.1.1
+data UnknownStream
+
+
+-- | Deliberately "un-type" all three type parameters of a process. Then, the
+-- three standard streams will be available as 'Maybe' t'System.IO.Handle'.
+-- Obtain them using
+--
+--  * 'processStdinUnknown'
+--
+--  * 'processStdoutUnknown'
+--
+--  * 'processStderrUnknown'
+--
+-- @since 1.1.1
+untypeProcess
+  :: Process stdin stdout stderr
+  -> Process UnknownStream UnknownStream UnknownStream
+untypeProcess p = p { phandle = phandle p }
+
+-- | Deliberately "un-type" the standard input stream (stdin) type parameter of
+-- a process. After this, use 'processStdinUnknown' to access 'Maybe'
+-- t'System.IO.Handle'.
+--
+-- @since 1.1.1
+untypeProcessStdin
+  :: Process stdin stdout stderr
+  -> Process UnknownStream stdout stderr
+untypeProcessStdin p = p { procStdin = procStdin p }
+
+-- | Deliberately "un-type" the standard output stream (stdout) type parameter of
+-- a process. After this, use 'processStdinUnknown' to access 'Maybe'
+-- t'System.IO.Handle'.
+--
+-- @since 1.1.1
+untypeProcessStdout
+  :: Process stdin stdout stderr
+  -> Process stdin UnknownStream stderr
+untypeProcessStdout p = p { procStdout = procStdout p }
+
+-- | Deliberately "un-type" the standard error stream (stderr) type parameter
+-- of a process. After this, use 'processStdinUnknown' to access 'Maybe'
+-- t'System.IO.Handle'.
+--
+-- @since 1.1.1
+untypeProcessStderr
+  :: Process stdin stdout stderr
+  -> Process stdin stdout UnknownStream
+untypeProcessStderr p = p { procStderr = procStderr p }
+
+-- | Obtain the stdin t'System.IO.Handle' from a process. The result could be
+-- 'Nothing', so dealing with that is the caller's responsibility.
+--
+-- @since 1.1.1
+processStdinUnknown :: Process UnknownStream stdout stderr -> Maybe Handle
+processStdinUnknown = procStdin
+
+-- | Obtain the stdout t'System.IO.Handle' from a process. There is no
+-- guarantee; It may return 'Nothing', and dealing with it is a runtime
+-- responsibility.
+--
+-- @since 1.1.1
+processStdoutUnknown :: Process stdin UnknownStream stderr -> Maybe Handle
+processStdoutUnknown = procStdout
+
+-- | Obtain the stderr t'System.IO.Handle' from a process. There is no
+-- guarantee; It may return 'Nothing', and dealing with it is a runtime
+-- responsibility.
+--
+-- @since 1.1.1
+processStderrUnknown :: Process stdin stdout UnknownStream -> Maybe Handle
+processStderrUnknown = procStderr
