@@ -16,6 +16,7 @@ jobs:
   install-stack:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v4
     - name: Restore cached ~/.stack
       id: cache-restore
       uses: actions/cache/restore@v4
