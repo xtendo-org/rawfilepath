@@ -56,6 +56,7 @@ jobs:
         path: ~/.stack
         key: stack-dir-lts-22.28
     - run: |
+        chmod +x ~/.local/bin/fourmolu
         ~/.local/bin/stack-2.15.7 init --resolver=lts-22.28
         ~/.local/bin/stack-2.15.7 test --resolver=lts-22.28
     - name: Save ~/.stack
