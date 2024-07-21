@@ -217,7 +217,7 @@ import RawFilePath.Process.Utility
 --
 -- You get the point. It gets out of hand! There are \( 4^3 = 64 \)
 -- combinations and they are all "different process types." You can't put them
--- in a same basket. There are realistic reasons you'd want this:
+-- in the same basket. There are realistic reasons you'd want this:
 --
 --  * To keep track of many sub-processes you create, and later properly clean
 --    them up.
