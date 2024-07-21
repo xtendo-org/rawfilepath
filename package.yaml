@@ -1,7 +1,7 @@
 name: rawfilepath
 version: 1.1.1
 synopsis: Use RawFilePath instead of FilePath
-description: Please see README.md
+description: A fast and safe API with high-level features on `RawFilePath`, instead of `FilePath`, to avoid the encoding issues or performance penalties. Please see `README.md`
 category: System
 author: XT et al.
 maintainer: git@xtendo.org
