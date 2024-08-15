@@ -66,7 +66,18 @@
 -- utility: Take some text from @stdin@ and output the processed text to
 -- @stdout@.
 --
--- In @sed@ regex, @\\\>@ means "the end of the word." So, @"s\/\\\\\>\/!\/g"@
+-- In @sed@ regex,
+--
+-- @
+-- \\\>
+-- @
+--
+-- means "the end of the word." So,
+--
+-- @
+-- "s\/\\\\\>\/!\/g"
+-- @
+--
 -- means "substitute all ends of the words with an exclamation mark." Then, we
 -- feed some text to its @stdin@, close @stdin@ (to send EOF to @sed@'s
 -- @stdin@), and read what it wrote to @stdout@.
@@ -114,7 +125,7 @@
 -- This approach was inspired by the @typed-process@ package. Then why not
 -- just @typed-process@? @rawfilepath@ offers
 --
--- 1. RawFilePath!
+-- 1. 'RawFilePath'! (instead of 'FilePath' which is 'String'...)
 -- 2. A lot less dependency (only three packages)
 -- 3. A lot more portability (doesn't require any language extension).
 --
