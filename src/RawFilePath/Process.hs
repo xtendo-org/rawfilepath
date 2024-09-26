@@ -137,6 +137,9 @@ module RawFilePath.Process (
   -- $configuring
   ProcessConf,
   proc,
+  setCwd,
+  setEnv,
+  setCloseFds,
 
   -- *** Configuring process standard streams
   StreamType,

@@ -15,6 +15,9 @@ module RawFilePath.Process.Common (
   setStdin,
   setStdout,
   setStderr,
+  setCwd,
+  setEnv,
+  setCloseFds,
   UnknownStream,
   untypeProcess,
   untypeProcessStdin,
@@ -142,6 +145,39 @@ setStderr
 setStderr p newStderr = p{cfgStderr = newStderr}
 
 infixl 4 `setStderr`
+
+-- | Set the path to the working directory for the new process. 'Nothing' can be used to unset the property.
+--
+-- @since 1.1.2
+setCwd
+  :: ProcessConf stdin stdout stderr
+  -> Maybe RawFilePath
+  -> ProcessConf stdin stdout stderr
+setCwd p newCwd = p{cwd = newCwd}
+
+infixl 4 `setCwd`
+
+-- | Set the optional environment (otherwise inherit from the current process)
+--
+-- @since 1.1.2
+setEnv
+  :: ProcessConf stdin stdout stderr
+  -> Maybe [(ByteString, ByteString)]
+  -> ProcessConf stdin stdout stderr
+setEnv p newEnv = p{env = newEnv}
+
+infixl 4 `setEnv`
+
+-- | Control whether to close all file descriptors except stdin, stdout and stderr in the new process.
+--
+-- @since 1.1.2
+setCloseFds
+  :: ProcessConf stdin stdout stderr
+  -> Bool
+  -> ProcessConf stdin stdout stderr
+setCloseFds p newCloseFds = p{closeFds = newCloseFds}
+
+infixl 4 `setCloseFds`
 
 -- | The process type. The three type variables denote how its standard
 -- streams were initialized.
