@@ -3,10 +3,10 @@
 
    Support for System.Process
 
-   (c) XT <https://e.xtendo.org/> 2016
+   (c) XT <https://xtendo.org/> 2016, 2025
 
-   I've extracted this from the process library and modified it to fit the
-   need for the rawfilepath package.
+   I've extracted this from the "process" library and modified it to fit the
+   need for the "rawfilepath" package.
    ------------------------------------------------------------------------- */
 
 /* XXX This is a nasty hack; should put everything necessary in this package */
