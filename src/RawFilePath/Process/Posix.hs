@@ -11,12 +11,9 @@ module RawFilePath.Process.Posix (
   createPipeInternalFd,
 ) where
 
--- extra modules
-
 import Data.ByteString.Internal (ByteString (..))
+import qualified Data.List.NonEmpty as NE
 import RawFilePath.Import
--- local modules
-
 import RawFilePath.Process.Common
 import System.Posix.ByteString.FilePath (withFilePath)
 import qualified System.Posix.IO as Posix
@@ -76,7 +73,7 @@ createProcessInternal ProcessConf{..} =
             maybeWith withFilePath cwd $ \pWorkDir ->
               maybeWith with childGroup $ \pChildGroup ->
                 maybeWith with childUser $ \pChildUser ->
-                  withManyByteString cmdargs $ \pargs -> do
+                  withManyByteString (NE.toList cmdargs) $ \pargs -> do
                     fdin <- mbFd fdStdin cfgStdin
                     fdout <- mbFd fdStdout cfgStdout
                     fderr <- mbFd fdStderr cfgStderr
@@ -113,7 +110,7 @@ createProcessInternal ProcessConf{..} =
                       failedDoing <- peekCString cFailedDoing
                       when delegateCtlc stopDelegateControlC
                       -- TODO(XT): avoid String
-                      throwErrno (show (head cmdargs) ++ ": " ++ failedDoing)
+                      throwErrno (show (NE.head cmdargs) ++ ": " ++ failedDoing)
 
                     hIn <- mbPipe cfgStdin pfdStdInput WriteMode
                     hOut <- mbPipe cfgStdout pfdStdOutput ReadMode

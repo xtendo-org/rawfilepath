@@ -33,8 +33,7 @@ module RawFilePath.Process.Common (
   mbPipe,
 ) where
 
--- extra modules
-
+import Data.List.NonEmpty as NE
 import qualified GHC.IO.FD as FD
 import GHC.IO.Handle.FD as Module (mkHandleFromFD)
 import RawFilePath.Import
@@ -51,7 +50,7 @@ data UnknownStream
 -- | The process configuration that is needed for creating new processes. Use
 -- 'proc' to make one.
 data ProcessConf stdin stdout stderr = ProcessConf
-  { cmdargs :: [ByteString]
+  { cmdargs :: NonEmpty ByteString
   -- ^ Executable & arguments, or shell command
   , cwd :: Maybe RawFilePath
   -- ^ Optional path to the working directory for the new process
@@ -98,7 +97,7 @@ proc
   -> ProcessConf Inherit Inherit Inherit
 proc cmd args =
   ProcessConf
-    { cmdargs = cmd : args
+    { cmdargs = cmd :| args
     , cwd = Nothing
     , env = Nothing
     , cfgStdin = Inherit
