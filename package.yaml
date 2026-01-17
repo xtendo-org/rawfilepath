@@ -61,3 +61,4 @@ tests:
     - base
     - hspec
     - rawfilepath
+    - unix

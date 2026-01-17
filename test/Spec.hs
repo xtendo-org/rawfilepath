@@ -4,9 +4,17 @@
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
-import qualified Data.ByteString as B
-import RawFilePath
+import Data.ByteString (ByteString)
+import Data.ByteString.Builder (Builder)
+import qualified Data.ByteString.Builder as B hiding (writeFile)
+import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.RawFilePath as B
+import Data.Semigroup
+import Data.Unique
+import RawFilePath hiding (ProcessConf)
+import System.Exit
 import System.IO
+import System.Posix.Env.ByteString
 import Test.Hspec
 
 cWorkers :: Int
@@ -23,11 +31,9 @@ main = hspec $
       result <- B.hGetContents (processStdout p)
       _ <- waitForProcess p
       result `shouldBe` "hello\n"
+
     it "handles concurrent process IO safely" $ do
-      let mkPayload workerId iter =
-            B.pack $
-              map (fromIntegral . fromEnum) $
-                show workerId ++ ":" ++ show iter ++ ":" ++ replicate 256 'x'
+      let
       doneVars <-
         forM [1 .. cWorkers] $ \workerId -> do
           done <- newEmptyMVar
@@ -51,6 +57,103 @@ main = hspec $
       forM_ results $ \case
         Left err -> expectationFailure (displayException err)
         Right () -> return ()
+
+    it "searches PATH from env when command has no slash" $
+      withTempDir $ \tmpDir -> do
+        let binDir = tmpDir <> "/bin"
+            cmd = "rfp_execvpe_cmd"
+            scriptPath = mconcat [binDir, "/", cmd]
+        createDirectory binDir
+        writeScript scriptPath "A"
+        withEnvVars
+          [ ("PATH", binDir)
+          , ("RFP_TEST_VAR", "path")
+          ]
+          $ do
+            (exitCode, stdoutB, stderrB) <-
+              readProcessWithExitCode (proc cmd [])
+            exitCode `shouldBe` ExitSuccess
+            stderrB `shouldBe` ""
+            stdoutB `shouldBe` "A:path"
+
+    it "runs absolute path without consulting PATH" $
+      withTempDir $ \tmpDir -> do
+        let binA = tmpDir <> "/binA"
+            binB = tmpDir <> "/binB"
+            cmd = "rfp_execvpe_cmd"
+            scriptA = binA <> "/" <> cmd
+            scriptB = binB <> "/" <> cmd
+        createDirectory binA
+        createDirectory binB
+        writeScript scriptA "A"
+        writeScript scriptB "B"
+        withEnvVars
+          [ ("PATH", binB)
+          , ("RFP_TEST_VAR", "abs")
+          ]
+          $ do
+            (exitCode, stdoutB, stderrB) <-
+              readProcessWithExitCode (proc scriptA [])
+            exitCode `shouldBe` ExitSuccess
+            stderrB `shouldBe` ""
+            stdoutB `shouldBe` "A:abs"
  where
   trySome :: IO a -> IO (Either SomeException a)
   trySome = try
+
+  withEnvVars :: [(ByteString, ByteString)] -> IO a -> IO a
+  withEnvVars vars action = bracket setup restore (const action)
+   where
+    setup = do
+      saved <- forM vars $ \(key, _) -> do
+        value <- getEnv key
+        return (key, value)
+      forM_ vars $ \(key, value) -> setEnv key value True
+      return saved
+    restore saved =
+      forM_ saved $ \(key, value) ->
+        maybe (unsetEnv key) (\val -> setEnv key val True) value
+
+  withTempDir :: (RawFilePath -> IO a) -> IO a
+  withTempDir = bracket acquire removeDirectoryRecursive
+   where
+    acquire = do
+      base <- getTemporaryDirectory
+      unique <- newUnique
+      let dir =
+            build $
+              mconcat
+                [ B.byteString base
+                , "/rawfilepath-execvpe-"
+                , B.intDec (hashUnique unique)
+                ]
+      createDirectory dir
+      return dir
+
+  writeScript :: RawFilePath -> ByteString -> IO ()
+  writeScript path label = do
+    B.writeFile path (scriptBody label)
+    exitCode <- callProcess (proc "/bin/chmod" ["+x", path])
+    exitCode `shouldBe` ExitSuccess
+
+  scriptBody :: ByteString -> ByteString
+  scriptBody label =
+    B.concat
+      [ "#!/bin/sh\n"
+      , "printf '%s' \""
+      , label
+      , ":$RFP_TEST_VAR\"\n"
+      ]
+
+  mkPayload workerId iter =
+    build $
+      mconcat
+        [ B.intDec workerId
+        , ":"
+        , B.intDec iter
+        , ":"
+        , stimes (256 :: Int) "x"
+        ]
+
+build :: Builder -> ByteString
+build = LB.toStrict . B.toLazyByteString

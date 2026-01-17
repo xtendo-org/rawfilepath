@@ -73,4 +73,5 @@ test-suite rawfilepath-test
     , bytestring
     , hspec
     , rawfilepath
+    , unix
   default-language: Haskell2010
