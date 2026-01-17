@@ -5,13 +5,27 @@ description: A fast and safe API with high-level features on `RawFilePath`, inst
 category: System
 author: XT et al.
 maintainer: git@xtendo.org
-copyright: (C) 2016-2024 XT et al.
+copyright: (C) 2016-2026 XT et al.
 license: Apache-2.0
 github: xtendo-org/rawfilepath
 extra-source-files:
 - README.md
+
 dependencies:
+- base
 - bytestring
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
 library:
   source-dirs: src
   c-sources:
@@ -34,8 +48,9 @@ library:
   dependencies:
   - base >= 4.7 && < 5
   - unix
+
 tests:
-  RawFilePath-test:
+  rawfilepath-test:
     main: Spec.hs
     source-dirs: test
     ghc-options:
@@ -44,4 +59,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - base
+    - hspec
     - rawfilepath
