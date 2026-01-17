@@ -43,7 +43,7 @@ withManyByteString bs action =
 copyByteStrings :: [ByteString] -> Ptr Word8 -> Ptr (Ptr Word8) -> IO ()
 copyByteStrings [] _ cs = poke cs nullPtr
 copyByteStrings (PS fp o l : xs) buf cs = withForeignPtr fp $ \p -> do
-  copyBytes buf (p `plusPtr` o) (fromIntegral l)
+  copyBytes buf (p `plusPtr` o) l
   pokeByteOff buf l (0 :: Word8)
   poke cs (buf :: Ptr Word8)
   copyByteStrings

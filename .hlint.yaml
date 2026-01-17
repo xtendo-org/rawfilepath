@@ -1,3 +1,5 @@
+- arguments:
+  - --cpp-include=cbits
 - ignore: {name: "Use <$>"}
 - ignore: {name: Use newtype instead of data}
 - ignore: {name: Use tuple-section}

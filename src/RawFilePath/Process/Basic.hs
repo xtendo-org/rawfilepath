@@ -1,4 +1,9 @@
-module RawFilePath.Process.Basic where
+module RawFilePath.Process.Basic (
+  startProcess,
+  stopProcess,
+  waitForProcess,
+  terminateProcess,
+) where
 
 -- base modules
 

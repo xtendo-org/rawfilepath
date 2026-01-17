@@ -331,7 +331,7 @@ pfdToHandle pfd mode = do
   let filepath = "fd:" ++ show fd
   (fD, fd_type) <-
     FD.mkFD
-      (fromIntegral fd)
+      fd
       mode
       (Just (Stream, 0, 0)) -- avoid calling fstat()
       False {-is_socket-}

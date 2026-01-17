@@ -1,4 +1,8 @@
-module RawFilePath.Directory.Internal where
+module RawFilePath.Directory.Internal (
+  ioeAddLocation,
+  FileType (..),
+  fileTypeFromMetadata,
+) where
 
 import RawFilePath.Import
 import qualified System.Posix.ByteString as U

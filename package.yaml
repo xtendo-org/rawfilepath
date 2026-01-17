@@ -24,7 +24,6 @@ ghc-options:
 - -Wmissing-export-lists
 - -Wmissing-home-modules
 - -Wpartial-fields
-- -Wredundant-constraints
 
 library:
   source-dirs: src
@@ -57,6 +56,7 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -Werror
     dependencies:
     - base
     - hspec
