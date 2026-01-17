@@ -39,6 +39,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       STACK_BIN_DIR: ${{ github.workspace }}/.stack-bin
+      STACK_YAML: ${{ github.workspace }}/stack.yaml
       STACK_RESOLVER: ${{ matrix.resolver }}
       STACK_WORK_DIR: ${{ matrix.workdir }}
     steps:
@@ -113,6 +114,12 @@ jobs:
           stack --resolver "${STACK_RESOLVER}" --work-dir "${STACK_WORK_DIR}" setup
           compiler_bin=$(stack --resolver "${STACK_RESOLVER}" --work-dir "${STACK_WORK_DIR}" path --compiler-bin)
           echo "${compiler_bin}" >>"$GITHUB_PATH"
+
+      - name: Print working directory
+        shell: bash
+        run: |
+          pwd
+          ls
 
       - name: Run stack test
         shell: bash
