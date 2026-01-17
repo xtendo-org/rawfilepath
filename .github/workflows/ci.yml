@@ -39,7 +39,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       STACK_BIN_DIR: ${{ github.workspace }}/.stack-bin
-      STACK_ROOT: ${{ env.HOME }}/.stack
       STACK_RESOLVER: ${{ matrix.resolver }}
       STACK_WORK_DIR: ${{ matrix.workdir }}
     steps:
@@ -48,7 +47,7 @@ jobs:
         with:
           path: |
             ${{ env.STACK_BIN_DIR }}
-            ${{ env.STACK_ROOT }}
+            ~/.stack
             ${{ matrix.workdir }}
           key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ github.run_id }}
           restore-keys: |
@@ -60,7 +59,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          total_kb=$(du -sk "${STACK_BIN_DIR}" "${STACK_ROOT}" "${STACK_WORK_DIR}" 2>/dev/null | awk '{sum += $1} END {print sum + 0}')
+          total_kb=$(
+            (du -sk "${STACK_BIN_DIR}" "${HOME}/.stack" "${STACK_WORK_DIR}" 2>/dev/null || true) \
+              | awk '{sum += $1} END {print sum + 0}'
+          )
           echo "CACHE_SIZE_BEFORE=${total_kb}" >>"$GITHUB_ENV"
 
       - name: Add Stack to PATH
@@ -123,7 +125,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          total_kb=$(du -sk "${STACK_BIN_DIR}" "${STACK_ROOT}" "${STACK_WORK_DIR}" 2>/dev/null | awk '{sum += $1} END {print sum + 0}')
+          total_kb=$(
+            (du -sk "${STACK_BIN_DIR}" "${HOME}/.stack" "${STACK_WORK_DIR}" 2>/dev/null || true) \
+              | awk '{sum += $1} END {print sum + 0}'
+          )
           echo "CACHE_SIZE_AFTER=${total_kb}" >>"$GITHUB_ENV"
 
       - name: Save Stack cache
@@ -132,6 +137,6 @@ jobs:
         with:
           path: |
             ${{ env.STACK_BIN_DIR }}
-            ${{ env.STACK_ROOT }}
+            ~/.stack
             ${{ matrix.workdir }}
           key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ steps.cache-ts.outputs.cache_ts }}
