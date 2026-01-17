@@ -39,7 +39,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       STACK_BIN_DIR: ${{ github.workspace }}/.stack-bin
-      STACK_YAML: ${{ github.workspace }}/stack.yaml
       STACK_RESOLVER: ${{ matrix.resolver }}
       STACK_WORK_DIR: ${{ matrix.workdir }}
     steps:
@@ -102,6 +101,17 @@ jobs:
           repository: ${{ github.repository }}
           ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
 
+      - name: Generate stack.yaml for CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${STACK_WORK_DIR}"
+          cat >"${STACK_WORK_DIR}/stack.yaml" <<EOF
+          resolver: ${STACK_RESOLVER}
+          packages:
+            - .
+          EOF
+
       - name: Record cache timestamp
         id: cache-ts
         shell: bash
@@ -111,8 +121,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          stack --resolver "${STACK_RESOLVER}" --work-dir "${STACK_WORK_DIR}" setup
-          compiler_bin=$(stack --resolver "${STACK_RESOLVER}" --work-dir "${STACK_WORK_DIR}" path --compiler-bin)
+          stack --stack-yaml "${STACK_WORK_DIR}/stack.yaml" --work-dir "${STACK_WORK_DIR}" setup
+          compiler_bin=$(stack --stack-yaml "${STACK_WORK_DIR}/stack.yaml" --work-dir "${STACK_WORK_DIR}" path --compiler-bin)
           echo "${compiler_bin}" >>"$GITHUB_PATH"
 
       - name: Print working directory
@@ -125,7 +135,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          stack --resolver "${STACK_RESOLVER}" --work-dir "${STACK_WORK_DIR}" --system-ghc test --no-terminal
+          stack --stack-yaml "${STACK_WORK_DIR}/stack.yaml" --work-dir "${STACK_WORK_DIR}" --system-ghc test --no-terminal
 
       - name: Record cache size after
         shell: bash
