@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  # pull_request workflows operate on GitHub's temporary merge commit,
+  # ensuring we test the exact code that would land on main.
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  stack-test:
+    name: stack-test-${{ matrix.cache_prefix }}-${{ matrix.lts }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            cache_prefix: linux
+            lts: lts23
+            resolver: lts-23.28
+            workdir: .stack-work-lts23
+          - os: ubuntu-24.04
+            cache_prefix: linux
+            lts: lts24
+            resolver: lts-24.28
+            workdir: .stack-work-lts24
+          - os: macos-14
+            cache_prefix: macos
+            lts: lts23
+            resolver: lts-23.28
+            workdir: .stack-work-lts23
+          - os: macos-14
+            cache_prefix: macos
+            lts: lts24
+            resolver: lts-24.28
+            workdir: .stack-work-lts24
+    runs-on: ${{ matrix.os }}
+    env:
+      STACK_BIN_DIR: ${{ github.workspace }}/.stack-bin
+      STACK_ROOT: ${{ env.HOME }}/.stack
+      STACK_RESOLVER: ${{ matrix.resolver }}
+      STACK_WORK_DIR: ${{ matrix.workdir }}
+    steps:
+      - name: Restore Stack cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ env.STACK_BIN_DIR }}
+            ${{ env.STACK_ROOT }}
+            ${{ matrix.workdir }}
+          key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ matrix.cache_prefix }}-${{ matrix.lts }}-
+            ${{ matrix.cache_prefix }}-
+
+      - name: Record cache size before
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          total_kb=$(du -sk "${STACK_BIN_DIR}" "${STACK_ROOT}" "${STACK_WORK_DIR}" 2>/dev/null | awk '{sum += $1} END {print sum + 0}')
+          echo "CACHE_SIZE_BEFORE=${total_kb}" >>"$GITHUB_ENV"
+
+      - name: Add Stack to PATH
+        shell: bash
+        run: echo "${STACK_BIN_DIR}" >>"$GITHUB_PATH"
+
+      - name: Check for Stack
+        id: stack-check
+        shell: bash
+        run: |
+          if command -v stack >/dev/null 2>&1; then
+            echo "found=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "found=false" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Stack
+        if: steps.stack-check.outputs.found != 'true'
+        uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+          stack-version: 'latest'
+
+      - name: Capture Stack binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${STACK_BIN_DIR}"
+          cp "$(command -v stack)" "${STACK_BIN_DIR}/stack"
+          chmod +x "${STACK_BIN_DIR}/stack"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          repository: ${{ github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
+
+      - name: Record cache timestamp
+        id: cache-ts
+        shell: bash
+        run: echo "cache_ts=$(date -u +"%Y%m%d%H%M%S")" >>"$GITHUB_OUTPUT"
+
+      - name: Setup resolver compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          stack --resolver "${STACK_RESOLVER}" --work-dir "${STACK_WORK_DIR}" setup
+          compiler_bin=$(stack --resolver "${STACK_RESOLVER}" --work-dir "${STACK_WORK_DIR}" path --compiler-bin)
+          echo "${compiler_bin}" >>"$GITHUB_PATH"
+
+      - name: Run stack test
+        shell: bash
+        run: |
+          set -euo pipefail
+          stack --resolver "${STACK_RESOLVER}" --work-dir "${STACK_WORK_DIR}" --system-ghc test --no-terminal
+
+      - name: Record cache size after
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          total_kb=$(du -sk "${STACK_BIN_DIR}" "${STACK_ROOT}" "${STACK_WORK_DIR}" 2>/dev/null | awk '{sum += $1} END {print sum + 0}')
+          echo "CACHE_SIZE_AFTER=${total_kb}" >>"$GITHUB_ENV"
+
+      - name: Save Stack cache
+        if: env.CACHE_SIZE_BEFORE != env.CACHE_SIZE_AFTER
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ env.STACK_BIN_DIR }}
+            ${{ env.STACK_ROOT }}
+            ${{ matrix.workdir }}
+          key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ steps.cache-ts.outputs.cache_ts }}
