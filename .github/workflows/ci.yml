@@ -149,7 +149,7 @@ jobs:
           echo "CACHE_SIZE_AFTER=${total_kb}" >>"$GITHUB_ENV"
 
       - name: Save Stack cache
-        if: env.CACHE_SIZE_BEFORE != env.CACHE_SIZE_AFTER
+        if: always() && env.CACHE_SIZE_BEFORE != env.CACHE_SIZE_AFTER
         uses: actions/cache/save@v4
         with:
           path: |
