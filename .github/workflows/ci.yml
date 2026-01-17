@@ -38,7 +38,6 @@ jobs:
             workdir: .stack-work-lts24
     runs-on: ${{ matrix.os }}
     env:
-      STACK_BIN_DIR: ${{ github.workspace }}/.stack-bin
       STACK_RESOLVER: ${{ matrix.resolver }}
       STACK_WORK_DIR: ${{ matrix.workdir }}
     steps:
@@ -46,7 +45,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            ${{ env.STACK_BIN_DIR }}
+            ~/.stack-bin
+            ~/.ghcup
+            ~/.cabal
             ~/.stack
             ${{ matrix.workdir }}
           key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ github.run_id }}
@@ -60,27 +61,40 @@ jobs:
           set -euo pipefail
 
           total_kb=$(
-            (du -sk "${STACK_BIN_DIR}" "${HOME}/.stack" "${STACK_WORK_DIR}" 2>/dev/null || true) \
+            (du -sk "${HOME}/.stack-bin" "${HOME}/.ghcup" "${HOME}/.cabal" "${HOME}/.stack" "${STACK_WORK_DIR}" 2>/dev/null || true) \
               | awk '{sum += $1} END {print sum + 0}'
           )
           echo "CACHE_SIZE_BEFORE=${total_kb}" >>"$GITHUB_ENV"
 
-      - name: Add Stack to PATH
+      - name: Add tools to PATH
         shell: bash
-        run: echo "${STACK_BIN_DIR}" >>"$GITHUB_PATH"
+        run: |
+          echo "${HOME}/.stack-bin" >>"$GITHUB_PATH"
+          echo "${HOME}/.ghcup/bin" >>"$GITHUB_PATH"
+          echo "${HOME}/.cabal/bin" >>"$GITHUB_PATH"
 
-      - name: Check for Stack
-        id: stack-check
+      - name: Check for toolchain
+        id: toolchain-check
         shell: bash
         run: |
           if command -v stack >/dev/null 2>&1; then
-            echo "found=true" >>"$GITHUB_OUTPUT"
+            echo "stack_found=true" >>"$GITHUB_OUTPUT"
           else
-            echo "found=false" >>"$GITHUB_OUTPUT"
+            echo "stack_found=false" >>"$GITHUB_OUTPUT"
+          fi
+          if command -v ghc >/dev/null 2>&1; then
+            echo "ghc_found=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "ghc_found=false" >>"$GITHUB_OUTPUT"
+          fi
+          if command -v cabal >/dev/null 2>&1; then
+            echo "cabal_found=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "cabal_found=false" >>"$GITHUB_OUTPUT"
           fi
 
-      - name: Install Stack
-        if: steps.stack-check.outputs.found != 'true'
+      - name: Install toolchain
+        if: steps.toolchain-check.outputs.stack_found != 'true' || steps.toolchain-check.outputs.ghc_found != 'true' || steps.toolchain-check.outputs.cabal_found != 'true'
         uses: haskell-actions/setup@v2
         with:
           enable-stack: true
@@ -90,9 +104,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "${STACK_BIN_DIR}"
-          cp "$(command -v stack)" "${STACK_BIN_DIR}/stack"
-          chmod +x "${STACK_BIN_DIR}/stack"
+          mkdir -p "${HOME}/.stack-bin"
+          cp "$(command -v stack)" "${HOME}/.stack-bin/stack"
+          chmod +x "${HOME}/.stack-bin/stack"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -149,7 +163,7 @@ jobs:
           set -euo pipefail
 
           total_kb=$(
-            (du -sk "${STACK_BIN_DIR}" "${HOME}/.stack" "${STACK_WORK_DIR}" 2>/dev/null || true) \
+            (du -sk "${HOME}/.stack-bin" "${HOME}/.ghcup" "${HOME}/.cabal" "${HOME}/.stack" "${STACK_WORK_DIR}" 2>/dev/null || true) \
               | awk '{sum += $1} END {print sum + 0}'
           )
           echo "CACHE_SIZE_AFTER=${total_kb}" >>"$GITHUB_ENV"
@@ -159,7 +173,9 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            ${{ env.STACK_BIN_DIR }}
+            ~/.stack-bin
+            ~/.ghcup
+            ~/.cabal
             ~/.stack
             ${{ matrix.workdir }}
           key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ steps.cache-ts.outputs.cache_ts }}
