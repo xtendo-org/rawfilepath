@@ -109,7 +109,7 @@ jobs:
           cat >"${STACK_WORK_DIR}/stack.yaml" <<EOF
           resolver: ${STACK_RESOLVER}
           packages:
-            - .
+            - ${GITHUB_WORKSPACE}
           EOF
 
       - name: Record cache timestamp
