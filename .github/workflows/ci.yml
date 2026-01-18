@@ -52,11 +52,11 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            ${{ env.HOME }}/.stack-bin
-            ${{ env.HOME }}/.ghcup
-            ${{ env.HOME }}/.cabal
-            ${{ env.HOME }}/.stack
-            ${{ github.workspace }}/${{ matrix.workdir }}
+            ~/.stack-bin
+            ~/.ghcup
+            ~/.cabal
+            ~/.stack
+            ${{ matrix.workdir }}
           key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ github.run_id }}
           restore-keys: |
             ${{ matrix.cache_prefix }}-${{ matrix.lts }}-
@@ -165,9 +165,9 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            ${{ env.HOME }}/.stack-bin
-            ${{ env.HOME }}/.ghcup
-            ${{ env.HOME }}/.cabal
-            ${{ env.HOME }}/.stack
-            ${{ github.workspace }}/${{ matrix.workdir }}
+            ~/.stack-bin
+            ~/.ghcup
+            ~/.cabal
+            ~/.stack
+            ${{ matrix.workdir }}
           key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ steps.cache-ts.outputs.cache_ts }}
