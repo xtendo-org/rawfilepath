@@ -10,11 +10,13 @@
 #include "HsBase.h"
 #include "Rts.h"
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
 #include <spawn.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -26,6 +28,26 @@ extern char **environ;
 
 static int add_closefrom_actions(posix_spawn_file_actions_t *actions, int start,
                                  const char **failed_doing) {
+  DIR *dir = opendir("/dev/fd");
+  if (dir != NULL) {
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+      if (entry->d_name[0] == '.')
+        continue;
+      char *end = NULL;
+      long fd = strtol(entry->d_name, &end, 10);
+      if (end == entry->d_name || *end != '\0')
+        continue;
+      if (fd < start || fd > INT_MAX)
+        continue;
+      if (add_close_action(actions, (int)fd, failed_doing) < 0) {
+        closedir(dir);
+        return -1;
+      }
+    }
+    closedir(dir);
+    return 0;
+  }
   long max_fd = sysconf(_SC_OPEN_MAX);
   if (max_fd < 0) {
     max_fd = 1024;
