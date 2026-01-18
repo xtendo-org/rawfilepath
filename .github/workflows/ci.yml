@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, fix/ci]
   # pull_request workflows operate on GitHub's temporary merge commit,
   # ensuring we test the exact code that would land on main.
   pull_request:
