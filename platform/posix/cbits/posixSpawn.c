@@ -30,6 +30,7 @@ static int add_closefrom_actions(posix_spawn_file_actions_t *actions, int start,
                                  const char **failed_doing) {
   DIR *dir = opendir("/dev/fd");
   if (dir != NULL) {
+    int self_fd = dirfd(dir);
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
       if (entry->d_name[0] == '.')
@@ -39,6 +40,8 @@ static int add_closefrom_actions(posix_spawn_file_actions_t *actions, int start,
       if (end == entry->d_name || *end != '\0')
         continue;
       if (fd < start || fd > INT_MAX)
+        continue;
+      if ((int)fd == self_fd)
         continue;
       if (add_close_action(actions, (int)fd, failed_doing) < 0) {
         closedir(dir);
