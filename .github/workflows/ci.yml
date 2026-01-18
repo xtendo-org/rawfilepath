@@ -41,15 +41,22 @@ jobs:
       STACK_RESOLVER: ${{ matrix.resolver }}
       STACK_WORK_DIR: ${{ matrix.workdir }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          repository: ${{ github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
+
       - name: Restore Stack cache
         uses: actions/cache/restore@v4
         with:
           path: |
-            ~/.stack-bin
-            ~/.ghcup
-            ~/.cabal
-            ~/.stack
-            ${{ matrix.workdir }}
+            ${{ env.HOME }}/.stack-bin
+            ${{ env.HOME }}/.ghcup
+            ${{ env.HOME }}/.cabal
+            ${{ env.HOME }}/.stack
+            ${{ github.workspace }}/${{ matrix.workdir }}
           key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ github.run_id }}
           restore-keys: |
             ${{ matrix.cache_prefix }}-${{ matrix.lts }}-
@@ -99,13 +106,6 @@ jobs:
         with:
           enable-stack: true
           stack-version: 'latest'
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          repository: ${{ github.repository }}
-          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
 
       - name: Generate stack.yaml for CI
         shell: bash
@@ -165,9 +165,9 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            ~/.stack-bin
-            ~/.ghcup
-            ~/.cabal
-            ~/.stack
-            ${{ matrix.workdir }}
+            ${{ env.HOME }}/.stack-bin
+            ${{ env.HOME }}/.ghcup
+            ${{ env.HOME }}/.cabal
+            ${{ env.HOME }}/.stack
+            ${{ github.workspace }}/${{ matrix.workdir }}
           key: ${{ matrix.cache_prefix }}-${{ matrix.lts }}-${{ steps.cache-ts.outputs.cache_ts }}
