@@ -10,11 +10,11 @@ import qualified Data.ByteString.Builder as B hiding (writeFile)
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.RawFilePath as B
 import Data.Semigroup
-import Data.Unique
 import RawFilePath hiding (ProcessConf)
 import System.Exit
 import System.IO
 import System.Posix.Env.ByteString
+import System.Posix.Temp.ByteString (mkdtemp)
 import Test.Hspec
 
 cWorkersDefault :: Int
@@ -129,16 +129,8 @@ main = hspec $
    where
     acquire = do
       base <- getTemporaryDirectory
-      unique <- newUnique
-      let dir =
-            build $
-              mconcat
-                [ B.byteString base
-                , "/rawfilepath-execvpe-"
-                , B.intDec (hashUnique unique)
-                ]
-      createDirectory dir
-      return dir
+      let template = B.concat [base, "/rawfilepath-temp-XXXXXX"]
+      mkdtemp template
 
   writeScript :: RawFilePath -> ByteString -> IO ()
   writeScript path label = do
