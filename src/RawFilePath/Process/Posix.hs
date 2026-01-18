@@ -95,7 +95,6 @@ createProcessInternal ProcessConf{..} =
                         pChildUser
                         (if delegateCtlc then 1 else 0)
                         ( (if createGroup then RUN_PROCESS_IN_NEW_GROUP else 0)
-                            .|. (if createNewConsole then RUN_PROCESS_NEW_CONSOLE else 0)
                             .|. (if newSession then RUN_PROCESS_NEW_SESSION else 0)
                         )
                         pFailedDoing

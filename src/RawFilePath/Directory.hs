@@ -196,11 +196,8 @@ createDirectoryIfMissing willCreateParents path
         -- the case that the dir did exist but another process deletes the
         -- directory and creates a file in its place before we can check
         -- that the directory did indeed exist.  We also follow this path
-        -- when we get a permissions error, as trying to create "." when in
-        -- the root directory on Windows fails with
-        --     CreateDirectory ".": permission denied (Access is denied.)
-        -- This caused GHCi to crash when loading a module in the root
-        -- directory.
+        -- when we get a permissions error, since attempting to create "."
+        -- in the root directory can fail with a permissions error.
         | isAlreadyExistsError e
             || isPermissionError e -> do
             canIgnore <- catchIOError (pathIsDirectory dir) $ \_ ->

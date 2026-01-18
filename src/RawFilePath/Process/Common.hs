@@ -68,11 +68,6 @@ data ProcessConf stdin stdout stderr = ProcessConf
   -- ^ Delegate control-C handling. Use this for interactive console
   -- processes to let them handle control-C themselves (see below for
   -- details).
-  , createNewConsole :: Bool
-  -- ^ Use the windows CREATE_NEW_CONSOLE flag when creating the process;
-  -- does nothing on other platforms.
-  --
-  -- Default: @False@
   , newSession :: Bool
   -- ^ Use posix setsid to start the new process in a new session; does nothing on other platforms.
   , childGroup :: Maybe GroupID
@@ -102,7 +97,6 @@ proc cmd args =
     , cfgStderr = Inherit
     , createGroup = False
     , delegateCtlc = False
-    , createNewConsole = False
     , newSession = False
     , childGroup = Nothing
     , childUser = Nothing
@@ -228,7 +222,6 @@ type PHANDLE = CPid
 
 data ProcessHandle__
   = OpenHandle PHANDLE
-  | OpenExtHandle PHANDLE PHANDLE PHANDLE
   | ClosedHandle ExitCode
 
 modifyProcessHandle

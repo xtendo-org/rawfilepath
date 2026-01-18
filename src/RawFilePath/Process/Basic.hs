@@ -43,7 +43,6 @@ waitForProcess ph = lockWaitpid $ do
         modifyProcessHandle ph $ \p_' ->
           case p_' of
             ClosedHandle e -> return (p_', e)
-            OpenExtHandle{} -> return (p_', ExitFailure (-1))
             OpenHandle ph' -> do
               closePHANDLE ph'
               code <- peek pret
@@ -55,8 +54,6 @@ waitForProcess ph = lockWaitpid $ do
       when delegatingCtlc $
         endDelegateControlC e
       return e
-    OpenExtHandle _ _job _iocp ->
-      return $ ExitFailure (-1)
  where
   -- If more than one thread calls `waitpid` at a time, `waitpid` will
   -- return the exit code to one of them and (-1) to the rest of them,
@@ -70,9 +67,6 @@ waitForProcess ph = lockWaitpid $ do
 terminateProcess :: Process stdin stdout stderr -> IO ()
 terminateProcess p = withProcessHandle p $ \case
   ClosedHandle _ -> return ()
-  OpenExtHandle{} ->
-    error
-      "terminateProcess with OpenExtHandle should not happen on POSIX."
   OpenHandle h -> do
     throwErrnoIfMinus1Retry_ "terminateProcess" $ c_terminateProcess h
     return ()
