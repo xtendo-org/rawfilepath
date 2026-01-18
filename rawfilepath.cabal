@@ -50,15 +50,21 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields
   include-dirs:
       cbits
+      platform/linux/cbits
+      platform/posix/cbits
   c-sources:
-      cbits/runProcess.c
-      cbits/processFlags.c
-      cbits/processFlags.h
+      cbits/rfpCommon.c
   build-depends:
       base >=4.7 && <5
     , bytestring
     , unix
   default-language: Haskell2010
+  if os(linux)
+    c-sources:
+        platform/linux/cbits/posixSpawn.c
+  else
+    c-sources:
+        platform/posix/cbits/posixSpawn.c
 
 test-suite rawfilepath-test
   type: exitcode-stdio-1.0

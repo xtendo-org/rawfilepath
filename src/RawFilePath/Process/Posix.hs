@@ -22,7 +22,7 @@ import System.Posix.Process.Internals (c_execvpe, pPrPr_disableITimers)
 import System.Posix.Signals
 import qualified System.Posix.Signals as Sig
 
-#include "processFlags.c"
+#include "processFlags.h"
 
 closePHANDLE :: PHANDLE -> IO ()
 closePHANDLE _ = return ()
@@ -80,11 +80,7 @@ createProcessInternal ProcessConf{..} =
 
                     when delegateCtlc startDelegateControlC
 
-                    -- runInteractiveProcess() blocks signals around the fork().
-                    -- Since blocking/unblocking of signals is a global state
-                    -- operation, we better ensure mutual exclusion of calls to
-                    -- runInteractiveProcess().
-                    procHandle <- withMVar runInteractiveProcessLock $ \_ ->
+                    procHandle <-
                       c_runInteractiveProcess
                         pargs
                         pWorkDir
@@ -98,8 +94,7 @@ createProcessInternal ProcessConf{..} =
                         pChildGroup
                         pChildUser
                         (if delegateCtlc then 1 else 0)
-                        ( (if closeFds then RUN_PROCESS_IN_CLOSE_FDS else 0)
-                            .|. (if createGroup then RUN_PROCESS_IN_NEW_GROUP else 0)
+                        ( (if createGroup then RUN_PROCESS_IN_NEW_GROUP else 0)
                             .|. (if createNewConsole then RUN_PROCESS_NEW_CONSOLE else 0)
                             .|. (if newSession then RUN_PROCESS_NEW_SESSION else 0)
                         )
@@ -119,10 +114,6 @@ createProcessInternal ProcessConf{..} =
                     mvarProcHandle <- newMVar (OpenHandle procHandle)
                     lock <- newMVar ()
                     return (Process hIn hOut hErr mvarProcHandle delegateCtlc lock)
-
-{-# NOINLINE runInteractiveProcessLock #-}
-runInteractiveProcessLock :: MVar ()
-runInteractiveProcessLock = unsafePerformIO $ newMVar ()
 
 -- ----------------------------------------------------------------------------
 -- Delegated control-C handling on Unix

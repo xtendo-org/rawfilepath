@@ -62,9 +62,6 @@ data ProcessConf stdin stdout stderr = ProcessConf
   -- ^ How to determine stdout
   , cfgStderr :: stderr
   -- ^ How to determine stderr
-  , closeFds :: Bool
-  -- ^ Close all file descriptors except stdin, stdout and stderr in the new
-  -- process
   , createGroup :: Bool
   -- ^ Create a new process group
   , delegateCtlc :: Bool
@@ -103,7 +100,6 @@ proc cmd args =
     , cfgStdin = Inherit
     , cfgStdout = Inherit
     , cfgStderr = Inherit
-    , closeFds = False
     , createGroup = False
     , delegateCtlc = False
     , createNewConsole = False

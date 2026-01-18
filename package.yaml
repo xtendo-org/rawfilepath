@@ -28,9 +28,15 @@ ghc-options:
 library:
   source-dirs: src
   c-sources:
-  - cbits/runProcess.c
-  - cbits/processFlags.c
-  - cbits/processFlags.h
+  - cbits/rfpCommon.c
+  when:
+  - condition: os(linux)
+    then:
+      c-sources:
+      - platform/linux/cbits/posixSpawn.c
+    else:
+      c-sources:
+      - platform/posix/cbits/posixSpawn.c
   default-extensions:
   - BangPatterns
   - CPP
@@ -39,6 +45,8 @@ library:
   - RecordWildCards
   include-dirs:
   - cbits
+  - platform/linux/cbits
+  - platform/posix/cbits
   exposed-modules:
   - Data.ByteString.RawFilePath
   - RawFilePath
