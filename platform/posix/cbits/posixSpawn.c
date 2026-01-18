@@ -10,6 +10,7 @@
 #include "HsBase.h"
 #include "Rts.h"
 
+#include <limits.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -22,6 +23,22 @@
 #include "rfpCommon.h"
 
 extern char **environ;
+
+static int add_closefrom_actions(posix_spawn_file_actions_t *actions, int start,
+                                 const char **failed_doing) {
+  long max_fd = sysconf(_SC_OPEN_MAX);
+  if (max_fd < 0) {
+    max_fd = 1024;
+  } else if (max_fd > INT_MAX) {
+    max_fd = INT_MAX;
+  }
+  for (int fd = start; fd < (int)max_fd; fd++) {
+    if (add_close_action(actions, fd, failed_doing) < 0) {
+      return -1;
+    }
+  }
+  return 0;
+}
 
 static int set_fd_cloexec(int fd) {
   int flags = fcntl(fd, F_GETFD);
@@ -123,30 +140,11 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
 #endif
   }
 
-#if defined(__APPLE__)
-  if (childGroup) {
-    r = posix_spawnattr_setgid_np(&attr, *childGroup);
-    if (r != 0) {
-      errno = r;
-      *failed_doing = "posix_spawn: setgid";
-      goto fail_attr;
-    }
-  }
-  if (childUser) {
-    r = posix_spawnattr_setuid_np(&attr, *childUser);
-    if (r != 0) {
-      errno = r;
-      *failed_doing = "posix_spawn: setuid";
-      goto fail_attr;
-    }
-  }
-#else
   if (childGroup || childUser) {
     errno = ENOTSUP;
     *failed_doing = "posix_spawn: setuid/setgid";
     goto fail_attr;
   }
-#endif
 
   r = posix_spawnattr_setflags(&attr, attr_flags);
   if (r != 0) {
@@ -206,10 +204,7 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
       goto fail_attr;
   }
 
-  r = posix_spawn_file_actions_addclosefrom_np(&actions, 3);
-  if (r != 0) {
-    errno = r;
-    *failed_doing = "posix_spawn: closefrom";
+  if (add_closefrom_actions(&actions, 3, (const char **)failed_doing) < 0) {
     goto fail_attr;
   }
 
