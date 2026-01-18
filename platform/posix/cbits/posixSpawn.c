@@ -26,6 +26,22 @@
 
 extern char **environ;
 
+#if defined(__APPLE__) && defined(POSIX_SPAWN_CLOEXEC_DEFAULT)
+#define USE_CLOEXEC_DEFAULT 1
+static int add_inherit_action(posix_spawn_file_actions_t *actions, int fd,
+                              const char **failed_doing) {
+  int r = posix_spawn_file_actions_addinherit_np(actions, fd);
+  if (r != 0) {
+    errno = r;
+    *failed_doing = "posix_spawn: inherit";
+    return -1;
+  }
+  return 0;
+}
+#else
+#define USE_CLOEXEC_DEFAULT 0
+#endif
+
 static int add_closefrom_actions(posix_spawn_file_actions_t *actions, int start,
                                  const char **failed_doing) {
   DIR *dir = opendir("/dev/fd");
@@ -171,6 +187,10 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
     goto fail_attr;
   }
 
+  if (USE_CLOEXEC_DEFAULT) {
+    attr_flags |= POSIX_SPAWN_CLOEXEC_DEFAULT;
+  }
+
   r = posix_spawnattr_setflags(&attr, attr_flags);
   if (r != 0) {
     errno = r;
@@ -200,6 +220,11 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
                         (const char **)failed_doing) < 0)
       goto fail_attr;
   }
+  if (USE_CLOEXEC_DEFAULT && fdStdIn == STDIN_FILENO) {
+    if (add_inherit_action(&actions, STDIN_FILENO,
+                           (const char **)failed_doing) < 0)
+      goto fail_attr;
+  }
 
   if (fdStdOut == -1) {
     if (add_dup2_action(&actions, fdStdOutput[1], STDOUT_FILENO,
@@ -212,6 +237,11 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
   } else {
     if (add_dup2_action(&actions, fdStdOut, STDOUT_FILENO,
                         (const char **)failed_doing) < 0)
+      goto fail_attr;
+  }
+  if (USE_CLOEXEC_DEFAULT && fdStdOut == STDOUT_FILENO) {
+    if (add_inherit_action(&actions, STDOUT_FILENO,
+                           (const char **)failed_doing) < 0)
       goto fail_attr;
   }
 
@@ -228,9 +258,15 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
                         (const char **)failed_doing) < 0)
       goto fail_attr;
   }
-
-  if (add_closefrom_actions(&actions, 3, (const char **)failed_doing) < 0) {
-    goto fail_attr;
+  if (USE_CLOEXEC_DEFAULT && fdStdErr == STDERR_FILENO) {
+    if (add_inherit_action(&actions, STDERR_FILENO,
+                           (const char **)failed_doing) < 0)
+      goto fail_attr;
+  }
+  if (!USE_CLOEXEC_DEFAULT) {
+    if (add_closefrom_actions(&actions, 3, (const char **)failed_doing) < 0) {
+      goto fail_attr;
+    }
   }
 
   char *const *envp = environment ? (char *const *)environment : environ;
