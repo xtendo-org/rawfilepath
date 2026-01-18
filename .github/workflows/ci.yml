@@ -150,6 +150,7 @@ jobs:
           stack --stack-yaml "${STACK_WORK_DIR}/stack.yaml" --work-dir "${STACK_WORK_DIR}" --system-ghc test --no-terminal
 
       - name: Record cache size after
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
