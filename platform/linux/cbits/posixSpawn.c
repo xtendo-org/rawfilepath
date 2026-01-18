@@ -137,8 +137,8 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
                         (const char **)failed_doing) < 0)
       goto fail_attr;
   } else if (fdStdIn == -2) {
-    if (add_close_action(&actions, STDIN_FILENO,
-                         (const char **)failed_doing) < 0)
+    if (add_close_action(&actions, STDIN_FILENO, (const char **)failed_doing) <
+        0)
       goto fail_attr;
   } else {
     if (add_dup2_action(&actions, fdStdIn, STDIN_FILENO,
@@ -151,8 +151,8 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
                         (const char **)failed_doing) < 0)
       goto fail_attr;
   } else if (fdStdOut == -2) {
-    if (add_close_action(&actions, STDOUT_FILENO,
-                         (const char **)failed_doing) < 0)
+    if (add_close_action(&actions, STDOUT_FILENO, (const char **)failed_doing) <
+        0)
       goto fail_attr;
   } else {
     if (add_dup2_action(&actions, fdStdOut, STDOUT_FILENO,
@@ -165,8 +165,8 @@ pid_t runInteractiveProcess(char *const args[], char *workingDirectory,
                         (const char **)failed_doing) < 0)
       goto fail_attr;
   } else if (fdStdErr == -2) {
-    if (add_close_action(&actions, STDERR_FILENO,
-                         (const char **)failed_doing) < 0)
+    if (add_close_action(&actions, STDERR_FILENO, (const char **)failed_doing) <
+        0)
       goto fail_attr;
   } else {
     if (add_dup2_action(&actions, fdStdErr, STDERR_FILENO,
