@@ -17,11 +17,17 @@ import System.IO
 import System.Posix.Env.ByteString
 import Test.Hspec
 
-cWorkers :: Int
-cWorkers = 64
+cWorkersDefault :: Int
+cWorkersDefault = 8
 
-cIterations :: Int
-cIterations = 10
+cWorkersCI :: Int
+cWorkersCI = 64
+
+cIterationsDefault :: Int
+cIterationsDefault = 8
+
+cIterationsCI :: Int
+cIterationsCI = 64
 
 main :: IO ()
 main = hspec $
@@ -33,7 +39,11 @@ main = hspec $
       result `shouldBe` "hello\n"
 
     it "handles concurrent process IO safely" $ do
-      let
+      (cWorkers, cIterations) <-
+        getEnv "GITHUB_ACTIONS" >>= \case
+          Just v | not (B.null v) -> return (cWorkersCI, cIterationsCI)
+          _ -> return (cWorkersDefault, cIterationsDefault)
+
       doneVars <-
         forM [1 .. cWorkers] $ \workerId -> do
           done <- newEmptyMVar
