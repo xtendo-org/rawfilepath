@@ -100,14 +100,6 @@ jobs:
           enable-stack: true
           stack-version: 'latest'
 
-      - name: Capture Stack binary
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "${HOME}/.stack-bin"
-          cp "$(command -v stack)" "${HOME}/.stack-bin/stack"
-          chmod +x "${HOME}/.stack-bin/stack"
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
